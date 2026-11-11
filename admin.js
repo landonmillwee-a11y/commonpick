@@ -311,17 +311,18 @@ async function savePoll(status) {
       .update({ status: "published", updated_at: new Date().toISOString() }).eq("id", pollId);
     if (error) { formMessage.textContent = error.message; return; }
   }
-  formMessage.textContent = status === "published" ? "Poll published." : "Poll saved.";
+  let queueWarning = "";
   if (currentAssistantDraftId) {
     const { error: draftUpdateError } = await client.from("commonpick_assistant_drafts")
       .update({ status: "used", poll_id: pollId, used_at: new Date().toISOString() })
       .eq("id", currentAssistantDraftId);
     if (draftUpdateError) {
-      formMessage.textContent = "Poll saved, but the assistant draft queue could not be updated: " + draftUpdateError.message;
+      queueWarning = " Poll saved, but the assistant draft queue could not be updated: " + draftUpdateError.message;
       console.error(draftUpdateError);
     }
   }
   resetForm();
+  formMessage.textContent = (status === "published" ? "Poll published." : "Poll saved.") + queueWarning;
   await loadAdminPolls();
   await loadAssistantQueue();
 }
