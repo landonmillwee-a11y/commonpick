@@ -44,33 +44,65 @@ function addChoice(value = "") {
   choiceFields.append(row);
 }
 
-async function loadDraftFromAssistant() {
-  formMessage.textContent = "Loading assistant draft…";
+let currentAssistantDraftId = null;
+
+function savedAssistantDraftIds() {
+  try { return new Set(JSON.parse(localStorage.getItem("commonpick_saved_assistant_drafts") || "[]")); }
+  catch { return new Set(); }
+}
+
+async function loadAssistantQueue() {
+  const queue = document.getElementById("assistant-draft-queue");
+  queue.textContent = "Loading draft queue…";
   try {
     const response = await fetch("/assistant-drafts.json", { cache: "no-store" });
-    if (!response.ok) throw new Error("Could not load the assistant draft file.");
+    if (!response.ok) throw new Error("Could not load the assistant draft queue.");
     const data = await response.json();
-    const draft = data.polls?.[0];
-    if (!draft) throw new Error("There are no assistant-generated drafts waiting.");
-    editingPollId = null;
-    pollForm.reset();
-    document.getElementById("poll-title").value = draft.title || "";
-    document.getElementById("poll-description").value = draft.description || "";
-    document.getElementById("poll-category").value = draft.category || "COMMUNITY";
-    choiceFields.innerHTML = "";
-    (draft.choices || []).forEach(choice => addChoice(choice));
-    if (choiceFields.children.length < 2) { addChoice(); addChoice(); }
-    document.getElementById("form-heading").textContent = "Review assistant draft.";
-    document.getElementById("save-draft").textContent = "Save as draft";
-    document.getElementById("publish-now").hidden = false;
-    document.getElementById("cancel-edit").hidden = false;
-    formMessage.textContent = "Draft loaded. Edit any field, then save it to your poll library. It will not go live unless you publish it.";
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  } catch (error) { formMessage.textContent = error.message; }
+    const drafts = data.polls || [];
+    queue.innerHTML = "";
+    if (!drafts.length) { queue.textContent = "No assistant-generated drafts are waiting."; return; }
+    const saved = savedAssistantDraftIds();
+    drafts.forEach(draft => {
+      const row = document.createElement("div");
+      row.className = "admin-poll-row";
+      const details = document.createElement("div");
+      const title = document.createElement("h3");
+      title.textContent = draft.title || "Untitled poll";
+      const meta = document.createElement("p");
+      meta.textContent = (draft.category || "COMMUNITY") + " · " + (draft.choices || []).length + " choices" + (saved.has(draft.id) ? " · ALREADY SAVED ON THIS BROWSER" : "");
+      details.append(title, meta);
+      const load = document.createElement("button");
+      load.className = "results-button";
+      load.type = "button";
+      load.textContent = saved.has(draft.id) ? "Load again" : "Review draft";
+      load.addEventListener("click", () => loadDraftFromAssistant(draft));
+      row.append(details, load);
+      queue.append(row);
+    });
+  } catch (error) { queue.textContent = error.message; }
+}
+
+function loadDraftFromAssistant(draft) {
+  currentAssistantDraftId = draft.id || null;
+  editingPollId = null;
+  pollForm.reset();
+  document.getElementById("poll-title").value = draft.title || "";
+  document.getElementById("poll-description").value = draft.description || "";
+  document.getElementById("poll-category").value = draft.category || "COMMUNITY";
+  choiceFields.innerHTML = "";
+  (draft.choices || []).forEach(choice => addChoice(choice));
+  if (choiceFields.children.length < 2) { addChoice(); addChoice(); }
+  document.getElementById("form-heading").textContent = "Review assistant draft.";
+  document.getElementById("save-draft").textContent = "Save as draft";
+  document.getElementById("publish-now").hidden = false;
+  document.getElementById("cancel-edit").hidden = false;
+  formMessage.textContent = "Draft loaded. Edit any field, then save it to your poll library. It will not go live unless you publish it.";
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function resetForm() {
   editingPollId = null;
+  currentAssistantDraftId = null;
   pollForm.reset();
   document.getElementById("poll-category").value = "COMMUNITY";
   choiceFields.innerHTML = "";
@@ -208,8 +240,14 @@ async function savePoll(status) {
     if (error) { formMessage.textContent = error.message; return; }
   }
   formMessage.textContent = status === "published" ? "Poll published." : "Poll saved.";
+  if (currentAssistantDraftId) {
+    const saved = savedAssistantDraftIds();
+    saved.add(currentAssistantDraftId);
+    localStorage.setItem("commonpick_saved_assistant_drafts", JSON.stringify([...saved]));
+  }
   resetForm();
   await loadAdminPolls();
+  await loadAssistantQueue();
 }
 
 loginForm.addEventListener("submit", async event => {
@@ -233,7 +271,7 @@ document.getElementById("publish-now").addEventListener("click", () => {
   savePoll("published");
 });
 document.getElementById("add-choice").addEventListener("click", () => addChoice());
-loadAssistantDraft.addEventListener("click", loadDraftFromAssistant);
+loadAssistantDraft.addEventListener("click", loadAssistantQueue);
 document.getElementById("cancel-edit").addEventListener("click", resetForm);
 signOut.addEventListener("click", async () => { await client.auth.signOut(); window.location.reload(); });
 
@@ -246,6 +284,7 @@ client.auth.onAuthStateChange(async (_event, session) => {
   if (allowed) {
     resetForm();
     await loadAdminPolls();
+    await loadAssistantQueue();
   } else if (user) {
     loginMessage.textContent = "This account is not authorized to manage CommonPick.";
     await client.auth.signOut();
@@ -260,6 +299,7 @@ client.auth.onAuthStateChange(async (_event, session) => {
     signOut.hidden = false;
     resetForm();
     await loadAdminPolls();
+    await loadAssistantQueue();
   }
   if (choiceFields.children.length === 0) resetForm();
 })();
