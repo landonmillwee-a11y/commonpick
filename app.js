@@ -5,6 +5,11 @@ const SUPABASE_ANON_KEY = "sb_publishable_BRuQrQwfwlQhAXnx9uuabA_XPje_3Ew";
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const pollList = document.getElementById("poll-list");
 const feedStatus = document.getElementById("feed-status");
+const voterAuthPanel = document.getElementById("voter-auth-panel");
+const voterAuthForm = document.getElementById("voter-auth-form");
+const voterEmailInput = document.getElementById("voter-email");
+const voterAuthStatus = document.getElementById("voter-auth-status");
+const voterSignOut = document.getElementById("voter-sign-out");
 
 function voterId() {
   let id = localStorage.getItem("commonpick_voter");
@@ -22,6 +27,8 @@ function escapeHtml(value) {
 }
 
 async function loadPolls() {
+  const { data: { session } } = await client.auth.getSession();
+  updateVoterAuth(session);
   feedStatus.textContent = "Loading community polls…";
   const { data: polls, error } = await client
     .from("commonpick_polls")
@@ -53,7 +60,7 @@ async function loadPolls() {
   }
 
   const { data: voteStats, error: voteError } = await client
-    .rpc("commonpick_public_vote_stats", { p_voter_id: voterId() });
+    .rpc("commonpick_public_vote_stats");
 
   if (voteError) {
     feedStatus.textContent = "Vote totals could not be loaded.";
@@ -214,17 +221,24 @@ async function loadPolls() {
           optionsContainer.append(button);
         });
         voteButton.disabled = !selected || showResults;
-        voteButton.textContent = showResults ? "Vote recorded" : "Cast my vote ↗";
+        voteButton.textContent = showResults ? "Vote recorded" : session ? "Cast my vote ↗" : "Sign in to vote ↗";
       }
 
       voteButton.addEventListener("click", async () => {
         if (!selected || showResults) return;
+        if (!session) {
+          status.textContent = "Verify your email before voting. Use the sign-in box above.";
+          voterAuthPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+          voterEmailInput.focus({ preventScroll: true });
+          return;
+        }
         voteButton.disabled = true;
         status.textContent = "Submitting your vote…";
         const { error } = await client.from("commonpick_votes").insert({
           poll_id: poll.id,
           option_id: selected,
-          voter_id: voterId()
+          voter_id: voterId(),
+          user_id: session.user.id
         });
         if (error) {
           status.textContent = error.code === "23505"
@@ -262,6 +276,50 @@ async function loadPolls() {
 
   feedStatus.textContent = "";
 }
+
+
+function updateVoterAuth(session) {
+  if (!voterAuthPanel) return;
+  const signedIn = !!session?.user;
+  voterAuthForm.hidden = signedIn;
+  voterSignOut.hidden = !signedIn;
+  voterAuthStatus.textContent = signedIn
+    ? "Verified as " + session.user.email + ". You can vote once per poll from any browser where you sign in."
+    : "Verify your email to vote. You can browse polls and results without signing in.";
+}
+
+if (voterAuthForm) {
+  voterAuthForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const email = voterEmailInput.value.trim().toLowerCase();
+    if (!email) return;
+    const submit = voterAuthForm.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    voterAuthStatus.textContent = "Sending your secure sign-in link…";
+    const { error } = await client.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + "/" }
+    });
+    submit.disabled = false;
+    voterAuthStatus.textContent = error
+      ? "Could not send the sign-in link: " + error.message
+      : "Check your email and open the sign-in link. You will return here ready to vote.";
+  });
+}
+
+if (voterSignOut) {
+  voterSignOut.addEventListener("click", async () => {
+    voterSignOut.disabled = true;
+    await client.auth.signOut();
+    voterSignOut.disabled = false;
+    await loadPolls();
+  });
+}
+
+client.auth.onAuthStateChange((event, session) => {
+  updateVoterAuth(session);
+  if (event !== "INITIAL_SESSION") loadPolls();
+});
 
 const recommendationForm = document.getElementById("category-recommendation-form");
 if (recommendationForm) {
