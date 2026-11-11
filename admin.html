@@ -65,6 +65,16 @@
       <section class="admin-manage">
         <div class="eyebrow">YOUR POLLS</div>
         <h2>Manage polls.</h2>
+        <div class="admin-library-tools">
+          <input id="admin-poll-search" type="search" placeholder="Search your polls…" aria-label="Search your polls">
+          <select id="admin-poll-status" aria-label="Filter polls by status">
+            <option value="all">All statuses</option>
+            <option value="published">Published</option>
+            <option value="draft">Drafts</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <p id="admin-poll-summary" class="admin-library-summary" aria-live="polite"></p>
         <div id="admin-poll-list"></div>
       </section>
     </div>
