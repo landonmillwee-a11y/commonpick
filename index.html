@@ -17,7 +17,6 @@
     <nav><a href="#vote">Vote</a><a href="#about">About</a></nav>
     <a class="header-cta" href="#vote">Make your pick <span>↗</span></a>
   </header>
-
   <main>
     <section class="hero">
       <div class="hero-copy">
@@ -32,36 +31,17 @@
         <div class="art-card card-front"><div class="card-top"><span>CP / 001</span><span class="live-dot">● LIVE</span></div><div class="vote-symbol">✳</div><div class="card-question">Your vote<br>counts here.</div><div class="card-bottom"><span>COMMONPICK</span><span>EST. 2026</span></div></div>
         <div class="floating-note">ONE PERSON<br><strong>ONE PICK.</strong></div>
       </div>
-      <div class="hero-index"><span>01 / OPEN VOTE</span><span>BUILT FOR EVERYONE</span></div>
+      <div class="hero-index"><span>01 / OPEN VOTES</span><span>BUILT FOR EVERYONE</span></div>
     </section>
-
     <section class="vote-section" id="vote">
       <div class="section-heading">
-        <div><div class="eyebrow">THE CURRENT DEBATE <span class="section-number">/ 001</span></div><h2>Settle the<br><em>question.</em></h2></div>
-        <div class="vote-meta"><span class="live-pill"><i></i> VOTING OPEN</span><span class="meta-small">FOOD & DRINK · COMMUNITY POLL</span></div>
+        <div><div class="eyebrow">THE COMMUNITY DECIDES <span class="section-number">/ LIVE</span></div><h2>Make your<br><em>pick.</em></h2></div>
+        <div class="vote-meta"><span class="live-pill"><i></i> VOTING OPEN</span><span class="meta-small">COMMUNITY POLLS · YOUR VOICE COUNTS</span></div>
       </div>
-      <div class="poll-panel">
-        <div class="poll-intro">
-          <div class="poll-kicker">FOOD & DRINK <span>•</span> FAST FOOD</div>
-          <h3>Who has the<br>best fast-food fries?</h3>
-          <p>There's only one way to settle it. Pick your favorite below.</p>
-          <div class="poll-count"><strong id="vote-count">—</strong><span>COMMUNITY VOTES</span></div>
-        </div>
-        <div class="poll-options-wrap">
-          <div class="options-label"><span>MAKE YOUR PICK</span><span>SELECT ONE</span></div>
-          <div id="options" class="options">
-            <div class="loading-state">Loading the contenders<span class="loading-dots">...</span></div>
-          </div>
-          <div class="poll-actions">
-            <button id="vote-button" class="vote-button" disabled>Cast my vote <span>↗</span></button>
-            <button id="results-button" class="results-button">View results</button>
-          </div>
-          <p id="status" class="status" aria-live="polite">Connect to see the live poll.</p>
-        </div>
-      </div>
-      <div class="poll-foot"><span>CP / COMMUNITY POLL 001</span><span>YOUR VOTE. YOUR CALL.</span></div>
+      <div id="poll-list" class="poll-list"><div class="empty-polls">Loading community polls…</div></div>
+      <p id="feed-status" class="feed-status" aria-live="polite"></p>
+      <div class="poll-foot"><span>CP / COMMUNITY POLLS</span><span>YOUR VOTE. YOUR CALL.</span></div>
     </section>
-
     <section class="principles" id="about">
       <div class="eyebrow">WHY COMMONPICK</div>
       <div class="principles-grid">
@@ -70,8 +50,7 @@
       </div>
     </section>
   </main>
-
-  <footer><a class="brand footer-brand" href="#"><span class="brand-mark">C</span><span>commonpick<span class="brand-period">.</span></span></a><span>THE PEOPLE DECIDE.</span><span>© 2026 COMMONPICK</span></footer>
+  <footer><a class="brand footer-brand" href="#"><span class="brand-mark">C</span><span>commonpick<span class="brand-period">.</span></span></a><a href="/admin.html">ADMIN</a><span>THE PEOPLE DECIDE.</span><span>© 2026 COMMONPICK</span></footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
