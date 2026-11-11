@@ -149,6 +149,8 @@ async function loadCategoryRecommendations() {
     const meta = document.createElement("p");
     meta.textContent = "SUBMITTED " + new Date(recommendation.created_at).toLocaleDateString();
     details.append(title, meta);
+    const actions = document.createElement("div");
+    actions.className = "admin-row-actions";
     const use = document.createElement("button");
     use.type = "button";
     use.className = "results-button";
@@ -161,7 +163,22 @@ async function loadCategoryRecommendations() {
       window.scrollTo({ top: 0, behavior: "smooth" });
       document.getElementById("poll-title").focus();
     });
-    row.append(details, use);
+    const dismiss = document.createElement("button");
+    dismiss.type = "button";
+    dismiss.className = "results-button";
+    dismiss.textContent = "Dismiss";
+    dismiss.addEventListener("click", async () => {
+      if (!window.confirm("Dismiss this category recommendation?")) return;
+      const { error: deleteError } = await client.from("commonpick_category_recommendations")
+        .delete().eq("id", recommendation.id);
+      if (deleteError) {
+        alert("Could not dismiss recommendation: " + deleteError.message);
+        return;
+      }
+      await loadCategoryRecommendations();
+    });
+    actions.append(use, dismiss);
+    row.append(details, actions);
     list.append(row);
   });
 }
@@ -206,22 +223,37 @@ function renderAdminPolls() {
     edit.textContent = "Edit";
     edit.addEventListener("click", () => editPoll(poll.id));
     actions.append(edit);
-    if (poll.status !== "closed") {
-      const toggle = document.createElement("button");
-      toggle.className = "results-button";
-      toggle.textContent = poll.status === "published" ? "Close voting" : "Publish";
-      toggle.addEventListener("click", async () => {
-        const next = poll.status === "published" ? "closed" : "published";
-        const { error: updateError } = await client.from("commonpick_polls")
-          .update({ status: next, updated_at: new Date().toISOString() }).eq("id", poll.id);
-        if (updateError) {
-          alert("Could not update poll status: " + updateError.message);
-          return;
-        }
-        await loadAdminPolls();
-      });
-      actions.append(toggle);
-    }
+    const toggle = document.createElement("button");
+    toggle.className = "results-button";
+    toggle.textContent = poll.status === "published" ? "Close voting" : poll.status === "closed" ? "Reopen voting" : "Publish";
+    toggle.addEventListener("click", async () => {
+      const next = poll.status === "published" ? "closed" : "published";
+      const { error: updateError } = await client.from("commonpick_polls")
+        .update({ status: next, updated_at: new Date().toISOString() }).eq("id", poll.id);
+      if (updateError) {
+        alert("Could not update poll status: " + updateError.message);
+        return;
+      }
+      await loadAdminPolls();
+    });
+    actions.append(toggle);
+
+    const remove = document.createElement("button");
+    remove.className = "results-button";
+    remove.textContent = "Delete";
+    remove.addEventListener("click", async () => {
+      const confirmed = window.confirm(
+        "Permanently delete this poll? Its answer choices will also be deleted. This cannot be undone."
+      );
+      if (!confirmed) return;
+      const { error: deleteError } = await client.from("commonpick_polls").delete().eq("id", poll.id);
+      if (deleteError) {
+        alert("Could not delete poll: " + deleteError.message);
+        return;
+      }
+      await loadAdminPolls();
+    });
+    actions.append(remove);
     row.append(details, actions);
     pollList.append(row);
   });
