@@ -214,6 +214,30 @@ create policy "Anyone can cast a vote"
 on public.commonpick_votes for insert to anon, authenticated
 with check (public.commonpick_vote_is_valid(poll_id, option_id));
 
+-- Allow the admin to check whether a poll has votes without exposing vote rows.
+create or replace function public.commonpick_admin_poll_vote_count(p_poll_id uuid)
+returns bigint
+language plpgsql
+stable
+security definer
+set search_path = public
+as $
+begin
+  if not public.commonpick_is_admin() then
+    raise exception 'Not authorized';
+  end if;
+
+  return (
+    select count(*)::bigint
+    from public.commonpick_votes
+    where poll_id = p_poll_id
+  );
+end;
+$;
+
+revoke all on function public.commonpick_admin_poll_vote_count(uuid) from public;
+grant execute on function public.commonpick_admin_poll_vote_count(uuid) to authenticated;
+
 -- Prevent answer-choice changes after a poll receives its first vote.
 create or replace function public.commonpick_prevent_option_changes_after_votes()
 returns trigger
