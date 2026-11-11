@@ -75,7 +75,6 @@ async function loadPolls() {
       <label class="poll-search-label" for="poll-category-filter">CATEGORY</label>
       <select id="poll-category-filter" class="poll-category-filter">
         <option value="ALL">All categories</option>
-        ${categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join("")}
       </select>
       <p class="poll-filter-count" id="poll-filter-count" aria-live="polite"></p>
     </div>
@@ -83,6 +82,12 @@ async function loadPolls() {
 
   const searchInput = document.getElementById("poll-search");
   const categoryFilter = document.getElementById("poll-category-filter");
+  categories.forEach(category => {
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    categoryFilter.append(option);
+  });
   const filterCount = document.getElementById("poll-filter-count");
   const resultsContainer = document.getElementById("poll-list-results");
 
