@@ -169,7 +169,7 @@ language sql
 stable
 security definer
 set search_path = public
-as $
+as $$
   with option_counts as (
     select v.poll_id, v.option_id, count(*)::bigint as vote_count
     from public.commonpick_votes v
@@ -198,16 +198,14 @@ as $
   left join poll_totals t on t.poll_id = o.poll_id
   where p.status = 'published'
   order by o.poll_id, o.position;
-$;
+$$;
 
 revoke all on function public.commonpick_public_vote_stats(uuid) from public;
 grant execute on function public.commonpick_public_vote_stats(uuid) to anon, authenticated;
 
--- Votes: public can see totals and cast one browser-identified vote per poll.
+-- Votes: public can cast a vote, but cannot read individual vote rows.
 drop policy if exists "Anyone can view vote totals" on public.commonpick_votes;
-create policy "Anyone can view vote totals"
-on public.commonpick_votes for select to anon, authenticated
-using (true);
+revoke select on public.commonpick_votes from anon, authenticated;
 
 drop policy if exists "Anyone can cast a vote" on public.commonpick_votes;
 create policy "Anyone can cast a vote"
