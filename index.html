@@ -49,6 +49,21 @@
         <div class="principle-copy"><p>CommonPick is a place to put everyday debates to a vote. From the best slice in town to the greatest movie ever made, the community decides.</p><p class="principle-note">NO PAID RANKINGS. NO SECRET JUDGES. JUST THE VOTE.</p></div>
       </div>
     </section>
+    <section class="category-recommendation" id="recommend-category">
+      <div class="recommendation-copy">
+        <div class="eyebrow">HELP SHAPE COMMONPICK</div>
+        <h2>What should we<br><em>cover next?</em></h2>
+        <p>Suggest a category for the community to vote on.</p>
+      </div>
+      <form id="category-recommendation-form" class="recommendation-form">
+        <label for="category-recommendation-input">YOUR CATEGORY IDEA</label>
+        <div class="recommendation-entry">
+          <input id="category-recommendation-input" type="text" maxlength="60" minlength="2" placeholder="Example: Best movies of all time" required>
+          <button class="vote-button" type="submit">Submit recommendation ↗</button>
+        </div>
+        <p id="category-recommendation-status" class="recommendation-status" aria-live="polite"></p>
+      </form>
+    </section>
   </main>
   <footer><a class="brand footer-brand" href="#"><span class="brand-mark">C</span><span>commonpick<span class="brand-period">.</span></span></a><a href="/admin.html">ADMIN</a><span>THE PEOPLE DECIDE.</span><span>© 2026 COMMONPICK</span></footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
