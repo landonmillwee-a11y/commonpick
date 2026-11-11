@@ -144,10 +144,10 @@ on conflict (id) do update set
 
 insert into public.commonpick_options (poll_id, option_id, label, position)
 values
-  ('11111111-1111-4111-8111-111111111111','mcdonalds',E"McDonald's",1),
+  ('11111111-1111-4111-8111-111111111111','mcdonalds','McDonald''s',1),
   ('11111111-1111-4111-8111-111111111111','chick-fil-a','Chick-fil-A',2),
   ('11111111-1111-4111-8111-111111111111','five-guys','Five Guys',3),
-  ('11111111-1111-4111-8111-111111111111','wendys',E"Wendy's",4)
+  ('11111111-1111-4111-8111-111111111111','wendys','Wendy''s',4)
 on conflict (poll_id, option_id) do update set
   label = excluded.label,
   position = excluded.position;
