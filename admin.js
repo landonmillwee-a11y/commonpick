@@ -74,8 +74,9 @@ async function loadAssistantQueue() {
       const load = document.createElement("button");
       load.className = "results-button";
       load.type = "button";
-      load.textContent = saved.has(draft.id) ? "Load again" : "Review draft";
-      load.addEventListener("click", () => loadDraftFromAssistant(draft));
+      load.textContent = saved.has(draft.id) ? "Saved to polls" : "Review draft";
+      load.disabled = saved.has(draft.id);
+      if (!load.disabled) load.addEventListener("click", () => loadDraftFromAssistant(draft));
       row.append(details, load);
       queue.append(row);
     });
