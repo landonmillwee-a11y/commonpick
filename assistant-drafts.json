@@ -19,44 +19,6 @@
         "Chicken",
         "Spinach"
       ]
-    },
-    {
-      "id": "e2c8a7b3-4d95-4f02-b6e3-9a1c7d4f8b52",
-      "title": "Which U.S. city has the best food scene?",
-      "description": "Think variety, local specialties, restaurants, and overall food culture.",
-      "category": "TRAVEL & CULTURE",
-      "choices": [
-        "New York City",
-        "Chicago",
-        "Los Angeles",
-        "New Orleans",
-        "Austin",
-        "San Francisco",
-        "Houston",
-        "Nashville",
-        "Miami",
-        "Portland",
-        "Philadelphia",
-        "San Diego"
-      ]
-    },
-    {
-      "id": "f3d9b8c4-5ea6-4013-c7f4-0b2d8e5a9c63",
-      "title": "What is the best way to spend a day off?",
-      "description": "Choose the kind of day you would most look forward to.",
-      "category": "LIFESTYLE",
-      "choices": [
-        "Relax at home",
-        "Go out to eat",
-        "Spend time outdoors",
-        "Take a day trip",
-        "See friends or family",
-        "Watch movies or shows",
-        "Work on a hobby",
-        "Go shopping",
-        "Attend a live event",
-        "Play games"
-      ]
     }
   ]
 }
