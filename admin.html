@@ -36,7 +36,8 @@
       <section class="admin-form-panel">
         <div class="eyebrow">NEW COMMUNITY POLL</div>
         <h2 id="form-heading">Create a poll.</h2>
-        <button class="results-button admin-add-choice" id="load-assistant-draft" type="button">Load assistant-generated draft</button>
+        <button class="results-button admin-add-choice" id="load-assistant-draft" type="button">Refresh assistant draft queue</button>
+        <div id="assistant-draft-queue" class="admin-poll-list" aria-live="polite"></div>
         <form id="poll-form">
           <label for="poll-title">POLL QUESTION</label>
           <input id="poll-title" maxlength="140" placeholder="What are we deciding?" required>
