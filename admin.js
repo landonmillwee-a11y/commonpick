@@ -14,7 +14,11 @@ const formMessage = document.getElementById("form-message");
 const pollList = document.getElementById("admin-poll-list");
 const signOut = document.getElementById("sign-out");
 const loadAssistantDraft = document.getElementById("load-assistant-draft");
+const adminPollSearch = document.getElementById("admin-poll-search");
+const adminPollStatus = document.getElementById("admin-poll-status");
+const adminPollSummary = document.getElementById("admin-poll-summary");
 let editingPollId = null;
+let cachedAdminPolls = [];
 
 function addChoice(value = "") {
   if (choiceFields.children.length >= 40) {
@@ -165,27 +169,38 @@ async function loadCategoryRecommendations() {
   });
 }
 
-async function loadAdminPolls() {
-  const { data: polls, error } = await client.from("commonpick_polls")
-    .select("id,title,category,status,created_at").order("created_at", { ascending: false });
-  if (error) {
-    pollList.textContent = "Could not load polls. Confirm that the database setup has been run.";
-    console.error(error);
-    return;
-  }
+function renderAdminPolls() {
+  const term = (adminPollSearch?.value || "").trim().toLowerCase();
+  const status = adminPollStatus?.value || "all";
+  const filtered = cachedAdminPolls.filter(poll => {
+    const matchesStatus = status === "all" || poll.status === status;
+    const searchable = [poll.title, poll.category, poll.status].join(" ").toLowerCase();
+    return matchesStatus && searchable.includes(term);
+  });
+
+  const counts = cachedAdminPolls.reduce((all, poll) => {
+    all[poll.status] = (all[poll.status] || 0) + 1;
+    return all;
+  }, {});
+  adminPollSummary.textContent =
+    `${cachedAdminPolls.length} total · ${counts.published || 0} published · ${counts.draft || 0} drafts · ${counts.closed || 0} closed · Showing ${filtered.length}`;
+
   pollList.innerHTML = "";
-  if (!polls.length) {
-    pollList.textContent = "No polls created yet.";
+  if (!filtered.length) {
+    pollList.textContent = cachedAdminPolls.length
+      ? "No polls match those filters."
+      : "No polls created yet.";
     return;
   }
-  polls.forEach(poll => {
+
+  filtered.forEach(poll => {
     const row = document.createElement("article");
     row.className = "admin-poll-row";
     const details = document.createElement("div");
     const title = document.createElement("h3");
     title.textContent = poll.title;
     const meta = document.createElement("p");
-    meta.textContent = poll.category + " · " + poll.status.toUpperCase();
+    meta.textContent = (poll.category || "COMMUNITY") + " · " + poll.status.toUpperCase();
     details.append(title, meta);
     const actions = document.createElement("div");
     actions.className = "admin-row-actions";
@@ -202,7 +217,10 @@ async function loadAdminPolls() {
         const next = poll.status === "published" ? "closed" : "published";
         const { error: updateError } = await client.from("commonpick_polls")
           .update({ status: next, updated_at: new Date().toISOString() }).eq("id", poll.id);
-        if (updateError) alert("Could not update poll status: " + updateError.message);
+        if (updateError) {
+          alert("Could not update poll status: " + updateError.message);
+          return;
+        }
         await loadAdminPolls();
       });
       actions.append(toggle);
@@ -210,6 +228,19 @@ async function loadAdminPolls() {
     row.append(details, actions);
     pollList.append(row);
   });
+}
+
+async function loadAdminPolls() {
+  pollList.textContent = "Loading polls…";
+  const { data: polls, error } = await client.from("commonpick_polls")
+    .select("id,title,category,status,created_at").order("created_at", { ascending: false });
+  if (error) {
+    pollList.textContent = "Could not load polls. Confirm that the database setup has been run.";
+    console.error(error);
+    return;
+  }
+  cachedAdminPolls = polls || [];
+  renderAdminPolls();
 }
 
 async function editPoll(id) {
@@ -316,6 +347,9 @@ document.getElementById("publish-now").addEventListener("click", () => {
 });
 document.getElementById("add-choice").addEventListener("click", () => addChoice());
 loadAssistantDraft.addEventListener("click", loadAssistantQueue);
+adminPollSearch?.addEventListener("input", renderAdminPolls);
+adminPollStatus?.addEventListener("change", renderAdminPolls);
+
 document.getElementById("cancel-edit").addEventListener("click", resetForm);
 signOut.addEventListener("click", async () => { await client.auth.signOut(); window.location.reload(); });
 
