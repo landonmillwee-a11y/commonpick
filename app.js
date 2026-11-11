@@ -152,6 +152,7 @@ async function loadPolls() {
         </div>
         <div class="poll-card-options">
           <div class="options-label"><span>${alreadyVoted ? "COMMUNITY RESULTS" : "MAKE YOUR PICK"}</span><span>${pollOptions.length} CHOICES</span></div>
+          <div class="results-summary" data-results-summary aria-live="polite"></div>
           <div class="options" data-options></div>
           <div class="poll-actions">
             <button class="vote-button" data-vote disabled>${alreadyVoted ? "Vote recorded" : "Cast my vote"} <span>↗</span></button>
@@ -160,6 +161,7 @@ async function loadPolls() {
           <p class="status" data-status aria-live="polite">${alreadyVoted ? "You've already voted on this poll from this browser." : "Choose one option to cast your vote."}</p>
         </div>`;
       const optionsContainer = card.querySelector("[data-options]");
+      const resultsSummary = card.querySelector("[data-results-summary]");
       const voteButton = card.querySelector("[data-vote]");
       const resultsButton = card.querySelector("[data-results]");
       const status = card.querySelector("[data-status]");
@@ -168,8 +170,27 @@ async function loadPolls() {
 
       function renderOptions() {
         optionsContainer.innerHTML = "";
+        const optionCounts = pollOptions.map(option => ({
+          option,
+          count: pollVotes.filter(v => v.option_id === option.option_id).length
+        }));
+        const highestCount = Math.max(0, ...optionCounts.map(item => item.count));
+        const leaders = optionCounts.filter(item => item.count === highestCount && highestCount > 0);
+        if (showResults) {
+          if (!pollVotes.length) {
+            resultsSummary.textContent = "No votes have been cast yet.";
+          } else if (leaders.length > 1) {
+            resultsSummary.textContent = `Tied · ${highestCount.toLocaleString()} votes each · ${pollVotes.length.toLocaleString()} total votes`;
+          } else {
+            resultsSummary.textContent = `Leading: ${leaders[0].option.label} · ${highestCount.toLocaleString()} votes · ${pollVotes.length.toLocaleString()} total votes`;
+          }
+          resultsSummary.hidden = false;
+        } else {
+          resultsSummary.hidden = true;
+          resultsSummary.textContent = "";
+        }
         pollOptions.forEach((option, i) => {
-          const count = pollVotes.filter(v => v.option_id === option.option_id).length;
+          const count = optionCounts[i].count;
           const pct = pollVotes.length ? Math.round(count / pollVotes.length * 100) : 0;
           const button = document.createElement("button");
           button.type = "button";
@@ -178,7 +199,7 @@ async function loadPolls() {
           button.innerHTML = `
             <span class="option-result" style="width:${showResults ? pct : 0}%"></span>
             <span class="option-main"><span class="option-letter">${String.fromCharCode(65 + i % 26)}</span><span>${escapeHtml(option.label)}</span></span>
-            <span class="option-percent">${showResults ? pct + "% · " + count : selected === option.option_id ? "SELECTED" : "CHOOSE"}</span>`;
+            <span class="option-percent">${showResults ? pct + "% · " + count.toLocaleString() + (count === 1 ? " vote" : " votes") : selected === option.option_id ? "SELECTED" : "CHOOSE"}</span>`;
           button.addEventListener("click", () => {
             selected = option.option_id;
             voteButton.disabled = false;
