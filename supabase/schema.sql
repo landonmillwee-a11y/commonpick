@@ -214,6 +214,55 @@ create policy "Anyone can cast a vote"
 on public.commonpick_votes for insert to anon, authenticated
 with check (public.commonpick_vote_is_valid(poll_id, option_id));
 
+-- Prevent answer-choice changes after a poll receives its first vote.
+create or replace function public.commonpick_prevent_option_changes_after_votes()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $
+declare
+  target_poll_id uuid;
+begin
+  if tg_op = 'DELETE' then
+    target_poll_id := old.poll_id;
+  else
+    target_poll_id := new.poll_id;
+  end if;
+
+  if exists (
+    select 1
+    from public.commonpick_votes v
+    where v.poll_id = target_poll_id
+  ) then
+    raise exception 'Answer choices cannot be changed after a poll has received votes.';
+  end if;
+
+  if tg_op = 'UPDATE' and old.poll_id is distinct from new.poll_id
+     and exists (
+       select 1
+       from public.commonpick_votes v
+       where v.poll_id = old.poll_id
+     ) then
+    raise exception 'Answer choices cannot be changed after a poll has received votes.';
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists commonpick_lock_options_after_votes
+on public.commonpick_options;
+
+create trigger commonpick_lock_options_after_votes
+before insert or update or delete
+on public.commonpick_options
+for each row
+execute function public.commonpick_prevent_option_changes_after_votes();
+
 -- Preserve the original fries poll and its votes.
 insert into public.commonpick_polls (id, title, description, category, status)
 values (
