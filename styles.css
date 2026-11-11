@@ -288,3 +288,43 @@ footer .footer-brand{color:#edf2f5}
   .recommendation-entry{flex-direction:column}
   .recommendation-entry .vote-button{align-self:flex-start}
 }
+
+
+/* Admin poll library controls */
+.admin-library-tools{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 190px;
+  gap:12px;
+  max-width:760px;
+  margin:18px 0 8px;
+}
+.admin-library-tools input,
+.admin-library-tools select{
+  width:100%;
+  min-width:0;
+  padding:12px 14px;
+  border:1px solid #40515e;
+  border-radius:3px;
+  background:#1b2833;
+  color:#edf2f5;
+  font:13px "DM Sans",sans-serif;
+}
+.admin-library-tools input::placeholder{color:#9aaab5}
+.admin-library-summary{
+  color:#aab7c1;
+  font-size:11px;
+  letter-spacing:.3px;
+  margin:10px 0 8px;
+}
+.admin-poll-row{
+  align-items:center;
+  flex-direction:row;
+}
+.admin-poll-row>div:first-child{min-width:0;flex:1}
+.admin-poll-row h3{overflow-wrap:anywhere}
+.admin-row-actions{justify-content:flex-end}
+@media(max-width:620px){
+  .admin-library-tools{grid-template-columns:1fr}
+  .admin-poll-row{align-items:flex-start;flex-direction:column}
+  .admin-row-actions{justify-content:flex-start}
+}
