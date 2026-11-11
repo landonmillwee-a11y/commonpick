@@ -165,3 +165,20 @@ nav,.eyebrow,.hero-description,.principle-copy p,.admin-lede{color:#4b5965}
   .poll-highlights{grid-template-columns:1fr;gap:22px}
   .highlight-heading h3{font-size:21px}
 }
+
+
+/* Clearer community results */
+.results-summary{
+  margin:0 0 12px;
+  padding:12px 14px;
+  border-left:3px solid var(--orange);
+  background:#263e52;
+  color:#f4f7f9;
+  font-size:11px;
+  font-weight:600;
+  line-height:1.5;
+}
+.results-summary[hidden]{display:none}
+.poll-card-options .option-result{background:#8fb5c6;opacity:.55}
+.poll-card-options .option-percent{font-weight:700;white-space:nowrap}
+.poll-card-options .option[disabled]{opacity:1}
