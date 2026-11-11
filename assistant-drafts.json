@@ -1,0 +1,22 @@
+{
+  "polls": [
+    {
+      "id": "a8e4b4c2-7d91-4f35-9c62-2a6e8b1d4307",
+      "title": "What is the best fast-food french fry?",
+      "description": "Think taste, texture, seasoning, and consistency. Which chain deserves the top spot?",
+      "category": "FOOD & DRINK",
+      "choices": [
+        "McDonald's",
+        "Wendy's",
+        "Chick-fil-A",
+        "Five Guys",
+        "Arby's",
+        "Whataburger",
+        "In-N-Out",
+        "Raising Cane's",
+        "Burger King",
+        "Popeyes"
+      ]
+    }
+  ]
+}
