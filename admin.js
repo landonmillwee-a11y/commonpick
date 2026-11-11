@@ -122,6 +122,49 @@ function slugify(text, index) {
   return (slug || "choice") + "-" + (index + 1);
 }
 
+async function loadCategoryRecommendations() {
+  const list = document.getElementById("category-recommendation-list");
+  list.textContent = "Loading recommendations…";
+  const { data: recommendations, error } = await client
+    .from("commonpick_category_recommendations")
+    .select("id,category,created_at")
+    .order("created_at", { ascending: false });
+  if (error) {
+    list.textContent = "Could not load recommendations. Run the category recommendations database setup.";
+    console.error(error);
+    return;
+  }
+  list.innerHTML = "";
+  if (!recommendations.length) {
+    list.textContent = "No category recommendations yet.";
+    return;
+  }
+  recommendations.forEach(recommendation => {
+    const row = document.createElement("article");
+    row.className = "admin-poll-row";
+    const details = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = recommendation.category;
+    const meta = document.createElement("p");
+    meta.textContent = "SUBMITTED " + new Date(recommendation.created_at).toLocaleDateString();
+    details.append(title, meta);
+    const use = document.createElement("button");
+    use.type = "button";
+    use.className = "results-button";
+    use.textContent = "Create poll draft";
+    use.addEventListener("click", () => {
+      resetForm();
+      document.getElementById("poll-category").value = recommendation.category;
+      document.getElementById("form-heading").textContent = "Create a poll from this recommendation.";
+      formMessage.textContent = "Category added. Write the poll question and answer choices, then save as a draft.";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      document.getElementById("poll-title").focus();
+    });
+    row.append(details, use);
+    list.append(row);
+  });
+}
+
 async function loadAdminPolls() {
   const { data: polls, error } = await client.from("commonpick_polls")
     .select("id,title,category,status,created_at").order("created_at", { ascending: false });
@@ -286,6 +329,7 @@ client.auth.onAuthStateChange(async (_event, session) => {
     resetForm();
     await loadAdminPolls();
     await loadAssistantQueue();
+    await loadCategoryRecommendations();
   } else if (user) {
     loginMessage.textContent = "This account is not authorized to manage CommonPick.";
     await client.auth.signOut();
@@ -301,6 +345,7 @@ client.auth.onAuthStateChange(async (_event, session) => {
     resetForm();
     await loadAdminPolls();
     await loadAssistantQueue();
+    await loadCategoryRecommendations();
   }
   if (choiceFields.children.length === 0) resetForm();
 })();
