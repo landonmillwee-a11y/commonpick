@@ -182,3 +182,83 @@ nav,.eyebrow,.hero-description,.principle-copy p,.admin-lede{color:#4b5965}
 .poll-card-options .option-result{background:#8fb5c6;opacity:.55}
 .poll-card-options .option-percent{font-weight:700;white-space:nowrap}
 .poll-card-options .option[disabled]{opacity:1}
+
+
+/* Dark mode: lower-glare palette across public site and admin */
+:root{
+  color-scheme:dark;
+  --navy:#e7edf2;
+  --navy2:#c9d5de;
+  --cream:#111820;
+  --paper:#18222c;
+  --blue:#9bb8c9;
+  --muted:#a3b0bb;
+  --line:#34424e;
+  --orange:#e3a16b;
+}
+html,body{background:#111820;color:#e7edf2}
+.topbar,footer{background:#111820;border-color:#2b3945}
+.brand,.brand-mark{color:#eef2f5}
+.brand-mark{background:#e7edf2;color:#111820}
+nav,.eyebrow,.hero-description,.principle-copy p{color:#aab6c0}
+.hero h1,.section-heading h2,.principles h2{color:#edf1f4}
+.hero h1 em,.section-heading h2 em,.principles h2 em,.admin-title em{color:#9bb8c9}
+.hero-index,.meta-small,.feed-status,footer{color:#9aa8b3}
+.header-cta{color:#e7edf2;border-color:#52616d}
+.header-cta:hover{border-color:var(--orange)}
+.vote-section{background:#18222c}
+.section-heading h2{color:#edf1f4}
+.live-pill{color:#dbe5eb;border-color:#526b5d}
+.poll-discovery{background:#202d38;border-color:#3a4b58}
+.poll-search-label{color:#d4dfe6}
+.poll-search,.poll-category-filter{
+  background:#121c25;color:#edf2f5;border-color:#536573;
+  color-scheme:dark;
+}
+.poll-search::placeholder{color:#a1afb9}
+.poll-search:focus,.poll-category-filter:focus{outline-color:#8eafc2;border-color:#a8c3d2}
+.poll-filter-count{color:#b9c5cd}
+.highlight-heading>span,.highlight-category,.highlight-meta{color:#aab9c4}
+.highlight-heading h3{color:#edf2f5}
+.highlight-card{background:#202d38;border-color:#3b4c59}
+.highlight-card:hover{border-color:#91adbd}
+.highlight-card strong{color:#edf2f5}
+.highlight-meta span{color:#e3a16b}
+.highlight-empty{color:#aab9c4}
+.poll-card,.empty-polls{background:#1a2834;color:#edf2f5}
+.poll-card-intro{background:#1a2834}
+.poll-card-options{background:#202f3c}
+.poll-kicker,.poll-count span{color:#b7c7d1}
+.poll-card-intro>p{color:#c2cdd4}
+.options-label{color:#c6d2da}
+.option{background:#293b4a;border-color:#526675;color:#f0f3f5}
+.option:hover{border-color:#e3a16b}
+.option.selected{background:#344858;border-color:#e3a16b}
+.option-letter{color:#e3eaf0;border-color:#a0b1bd}
+.option-percent{color:#f0f3f5}
+.poll-card-options .option-result{background:#8eb5c8;opacity:.55}
+.poll-card-options .results-button{color:#d9e3e9}
+.status{color:#c5d1d9}
+.results-summary{background:#2b4050;color:#f0f4f6}
+.filter-empty{background:#202d38;color:#e7edf2;border-color:#3b4c59}
+.principles{background:#111820}
+.principle-copy .principle-note{color:#dce5eb}
+.admin-body{background:#111820;color:#e7edf2}
+.admin-main{color:#e7edf2}
+.admin-title,.admin-login h2,.admin-form-panel h2,.admin-manage h2,.admin-poll-row h3{color:#edf2f5}
+.admin-lede,.admin-login p{color:#b2bec7}
+.admin-login,.admin-form-panel{background:#1b2833;border-color:#3b4b57;color:#e7edf2}
+.admin-login label,.admin-form-panel label{color:#c4d0d8}
+.admin-login input,.admin-form-panel input,.admin-form-panel textarea{
+  background:#111c25;color:#edf2f5;border-color:#536573;color-scheme:dark
+}
+.admin-login input::placeholder,.admin-form-panel input::placeholder,.admin-form-panel textarea::placeholder{color:#9aaab5}
+.admin-message{color:#a8c8d8}
+.admin-options-heading span,.admin-poll-row p{color:#aab7c1}
+.admin-poll-row{border-color:#34434f}
+.admin-add-choice,.admin-row-actions .results-button,.admin-poll-row .results-button{color:#a9c7d8}
+.remove-choice{color:#e3a16b}
+footer .footer-brand{color:#edf2f5}
+@media(prefers-reduced-motion:no-preference){
+  .highlight-card{transition:border-color .18s,background-color .18s}
+}
