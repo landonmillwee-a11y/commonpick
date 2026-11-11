@@ -50,41 +50,38 @@ function addChoice(value = "") {
 
 let currentAssistantDraftId = null;
 
-function savedAssistantDraftIds() {
-  try { return new Set(JSON.parse(localStorage.getItem("commonpick_saved_assistant_drafts") || "[]")); }
-  catch { return new Set(); }
-}
-
 async function loadAssistantQueue() {
   const queue = document.getElementById("assistant-draft-queue");
   queue.textContent = "Loading draft queue…";
-  try {
-    const response = await fetch("/assistant-drafts.json", { cache: "no-store" });
-    if (!response.ok) throw new Error("Could not load the assistant draft queue.");
-    const data = await response.json();
-    const drafts = data.polls || [];
-    queue.innerHTML = "";
-    if (!drafts.length) { queue.textContent = "No assistant-generated drafts are waiting."; return; }
-    const saved = savedAssistantDraftIds();
-    drafts.forEach(draft => {
-      const row = document.createElement("div");
-      row.className = "admin-poll-row";
-      const details = document.createElement("div");
-      const title = document.createElement("h3");
-      title.textContent = draft.title || "Untitled poll";
-      const meta = document.createElement("p");
-      meta.textContent = (draft.category || "COMMUNITY") + " · " + (draft.choices || []).length + " choices" + (saved.has(draft.id) ? " · ALREADY SAVED ON THIS BROWSER" : "");
-      details.append(title, meta);
-      const load = document.createElement("button");
-      load.className = "results-button";
-      load.type = "button";
-      load.textContent = saved.has(draft.id) ? "Saved to polls" : "Review draft";
-      load.disabled = saved.has(draft.id);
-      if (!load.disabled) load.addEventListener("click", () => loadDraftFromAssistant(draft));
-      row.append(details, load);
-      queue.append(row);
-    });
-  } catch (error) { queue.textContent = error.message; }
+  const { data: drafts, error } = await client.from("commonpick_assistant_drafts")
+    .select("id,title,description,category,choices,status,created_at")
+    .order("created_at", { ascending: false });
+  if (error) {
+    queue.textContent = "Could not load assistant drafts. Run the assistant draft database setup.";
+    console.error(error);
+    return;
+  }
+  queue.innerHTML = "";
+  if (!drafts?.length) { queue.textContent = "No assistant-generated drafts are waiting."; return; }
+  drafts.forEach(draft => {
+    const row = document.createElement("div");
+    row.className = "admin-poll-row";
+    const details = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = draft.title || "Untitled poll";
+    const meta = document.createElement("p");
+    meta.textContent = (draft.category || "COMMUNITY") + " · " + (draft.choices || []).length + " choices" +
+      (draft.status === "used" ? " · SAVED TO POLL LIBRARY" : " · WAITING FOR REVIEW");
+    details.append(title, meta);
+    const load = document.createElement("button");
+    load.className = "results-button";
+    load.type = "button";
+    load.textContent = draft.status === "used" ? "Saved to polls" : "Review draft";
+    load.disabled = draft.status === "used";
+    if (!load.disabled) load.addEventListener("click", () => loadDraftFromAssistant(draft));
+    row.append(details, load);
+    queue.append(row);
+  });
 }
 
 function loadDraftFromAssistant(draft) {
@@ -316,9 +313,13 @@ async function savePoll(status) {
   }
   formMessage.textContent = status === "published" ? "Poll published." : "Poll saved.";
   if (currentAssistantDraftId) {
-    const saved = savedAssistantDraftIds();
-    saved.add(currentAssistantDraftId);
-    localStorage.setItem("commonpick_saved_assistant_drafts", JSON.stringify([...saved]));
+    const { error: draftUpdateError } = await client.from("commonpick_assistant_drafts")
+      .update({ status: "used", poll_id: pollId, used_at: new Date().toISOString() })
+      .eq("id", currentAssistantDraftId);
+    if (draftUpdateError) {
+      formMessage.textContent = "Poll saved, but the assistant draft queue could not be updated: " + draftUpdateError.message;
+      console.error(draftUpdateError);
+    }
   }
   resetForm();
   await loadAdminPolls();
