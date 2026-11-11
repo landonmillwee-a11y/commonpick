@@ -89,6 +89,8 @@ async function loadAssistantQueue() {
 function loadDraftFromAssistant(draft) {
   currentAssistantDraftId = draft.id || null;
   editingPollId = null;
+  editingPollHasVotes = false;
+  document.getElementById("add-choice").disabled = false;
   pollForm.reset();
   document.getElementById("poll-title").value = draft.title || "";
   document.getElementById("poll-description").value = draft.description || "";
