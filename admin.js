@@ -15,6 +15,7 @@ const pollList = document.getElementById("admin-poll-list");
 const signOut = document.getElementById("sign-out");
 const loadAssistantDraft = document.getElementById("load-assistant-draft");
 let editingPollId = null;
+let editingPollHasVotes = false;
 
 function addChoice(value = "") {
   if (choiceFields.children.length >= 40) {
@@ -29,10 +30,12 @@ function addChoice(value = "") {
   input.placeholder = "Choice " + (choiceFields.children.length + 1);
   input.value = value;
   input.required = true;
+  input.disabled = editingPollHasVotes;
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "remove-choice";
   remove.textContent = "Remove";
+  remove.disabled = editingPollHasVotes;
   remove.addEventListener("click", () => {
     if (choiceFields.children.length <= 2) {
       formMessage.textContent = "Every poll needs at least two choices.";
@@ -103,6 +106,8 @@ function loadDraftFromAssistant(draft) {
 
 function resetForm() {
   editingPollId = null;
+  editingPollHasVotes = false;
+  document.getElementById("add-choice").disabled = false;
   currentAssistantDraftId = null;
   pollForm.reset();
   document.getElementById("poll-category").value = "COMMUNITY";
@@ -219,7 +224,14 @@ async function editPoll(id) {
   const { data: options, error: optionsError } = await client.from("commonpick_options")
     .select("option_id,label,position").eq("poll_id", id).order("position");
   if (optionsError) { formMessage.textContent = optionsError.message; return; }
+  const { count: voteCount, error: voteCountError } = await client
+    .from("commonpick_votes")
+    .select("id", { count: "exact", head: true })
+    .eq("poll_id", id);
+  if (voteCountError) { formMessage.textContent = voteCountError.message; return; }
   editingPollId = id;
+  editingPollHasVotes = (voteCount || 0) > 0;
+  document.getElementById("add-choice").disabled = editingPollHasVotes;
   document.getElementById("poll-title").value = poll.title;
   document.getElementById("poll-description").value = poll.description || "";
   document.getElementById("poll-category").value = poll.category || "COMMUNITY";
@@ -229,9 +241,9 @@ async function editPoll(id) {
   document.getElementById("save-draft").textContent = "Save changes";
   document.getElementById("publish-now").hidden = true;
   document.getElementById("cancel-edit").hidden = false;
-  formMessage.textContent = poll.status === "published"
-    ? "Editing a published poll changes its choices. Existing votes are retained only for choices with the same names."
-    : "";
+  formMessage.textContent = editingPollHasVotes
+    ? "This poll already has votes. You can edit its question, description, and category, but its answer choices are locked to protect existing results."
+    : "No votes have been recorded yet. You can edit all poll fields.";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -252,20 +264,22 @@ async function savePoll(status) {
       title, description, category, updated_at: new Date().toISOString()
     }).eq("id", editingPollId);
     if (error) { formMessage.textContent = error.message; return; }
-    const { data: existing } = await client.from("commonpick_options")
-      .select("option_id,label").eq("poll_id", editingPollId);
-    const oldByLabel = new Map((existing || []).map(o => [o.label.toLowerCase(), o.option_id]));
-    const { error: deleteError } = await client.from("commonpick_options")
-      .delete().eq("poll_id", editingPollId);
-    if (deleteError) { formMessage.textContent = deleteError.message; return; }
-    const optionRows = labels.map((label, i) => ({
-      poll_id: pollId,
-      option_id: oldByLabel.get(label.toLowerCase()) || slugify(label, i),
-      label,
-      position: i + 1
-    }));
-    const { error: insertError } = await client.from("commonpick_options").insert(optionRows);
-    if (insertError) { formMessage.textContent = insertError.message; return; }
+    if (!editingPollHasVotes) {
+      const { data: existing } = await client.from("commonpick_options")
+        .select("option_id,label").eq("poll_id", editingPollId);
+      const oldByLabel = new Map((existing || []).map(o => [o.label.toLowerCase(), o.option_id]));
+      const { error: deleteError } = await client.from("commonpick_options")
+        .delete().eq("poll_id", editingPollId);
+      if (deleteError) { formMessage.textContent = deleteError.message; return; }
+      const optionRows = labels.map((label, i) => ({
+        poll_id: pollId,
+        option_id: oldByLabel.get(label.toLowerCase()) || slugify(label, i),
+        label,
+        position: i + 1
+      }));
+      const { error: insertError } = await client.from("commonpick_options").insert(optionRows);
+      if (insertError) { formMessage.textContent = insertError.message; return; }
+    }
   } else {
     const { data, error } = await client.from("commonpick_polls").insert({
       title, description, category, status
