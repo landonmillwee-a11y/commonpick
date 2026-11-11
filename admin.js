@@ -224,10 +224,8 @@ async function editPoll(id) {
   const { data: options, error: optionsError } = await client.from("commonpick_options")
     .select("option_id,label,position").eq("poll_id", id).order("position");
   if (optionsError) { formMessage.textContent = optionsError.message; return; }
-  const { count: voteCount, error: voteCountError } = await client
-    .from("commonpick_votes")
-    .select("id", { count: "exact", head: true })
-    .eq("poll_id", id);
+  const { data: voteCount, error: voteCountError } = await client
+    .rpc("commonpick_admin_poll_vote_count", { p_poll_id: id });
   if (voteCountError) { formMessage.textContent = voteCountError.message; return; }
   editingPollId = id;
   editingPollHasVotes = (voteCount || 0) > 0;
