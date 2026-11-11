@@ -328,3 +328,23 @@ footer .footer-brand{color:#edf2f5}
   .admin-poll-row{align-items:flex-start;flex-direction:column}
   .admin-row-actions{justify-content:flex-start}
 }
+
+/* Verified email sign-in for voting */
+.voter-auth-panel{
+  display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;
+  padding:20px 22px;margin:0 0 24px;background:#202d38;border:1px solid #3b4c59;
+}
+.voter-auth-copy{flex:1;min-width:220px}
+.voter-auth-copy strong{display:block;color:#edf2f5;font:600 16px Manrope,sans-serif}
+.voter-auth-copy p{margin:7px 0 0;color:#b9c5cd;font-size:11px;line-height:1.5}
+.voter-auth-form{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.voter-auth-form label{display:block;width:100%;font-size:8px;font-weight:700;letter-spacing:1.2px;color:#c4d0d8}
+.voter-auth-form input{min-width:220px;min-height:43px;padding:11px 13px;border:1px solid #536573;border-radius:3px;background:#111c25;color:#edf2f5;font:13px "DM Sans",sans-serif}
+.voter-auth-form .vote-button{min-height:43px}
+.voter-sign-out{white-space:nowrap}
+@media(max-width:600px){
+  .voter-auth-panel{align-items:stretch;flex-direction:column}
+  .voter-auth-form{align-items:stretch;flex-direction:column}
+  .voter-auth-form input{width:100%;min-width:0}
+  .voter-auth-form .vote-button{align-self:flex-start}
+}
