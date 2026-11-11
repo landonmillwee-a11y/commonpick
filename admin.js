@@ -13,6 +13,7 @@ const choiceFields = document.getElementById("choice-fields");
 const formMessage = document.getElementById("form-message");
 const pollList = document.getElementById("admin-poll-list");
 const signOut = document.getElementById("sign-out");
+const loadAssistantDraft = document.getElementById("load-assistant-draft");
 let editingPollId = null;
 
 function addChoice(value = "") {
@@ -41,6 +42,31 @@ function addChoice(value = "") {
   });
   row.append(input, remove);
   choiceFields.append(row);
+}
+
+async function loadDraftFromAssistant() {
+  formMessage.textContent = "Loading assistant draft…";
+  try {
+    const response = await fetch("/assistant-drafts.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("Could not load the assistant draft file.");
+    const data = await response.json();
+    const draft = data.polls?.[0];
+    if (!draft) throw new Error("There are no assistant-generated drafts waiting.");
+    editingPollId = null;
+    pollForm.reset();
+    document.getElementById("poll-title").value = draft.title || "";
+    document.getElementById("poll-description").value = draft.description || "";
+    document.getElementById("poll-category").value = draft.category || "COMMUNITY";
+    choiceFields.innerHTML = "";
+    (draft.choices || []).forEach(choice => addChoice(choice));
+    if (choiceFields.children.length < 2) { addChoice(); addChoice(); }
+    document.getElementById("form-heading").textContent = "Review assistant draft.";
+    document.getElementById("save-draft").textContent = "Save as draft";
+    document.getElementById("publish-now").hidden = false;
+    document.getElementById("cancel-edit").hidden = false;
+    formMessage.textContent = "Draft loaded. Edit any field, then save it to your poll library. It will not go live unless you publish it.";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (error) { formMessage.textContent = error.message; }
 }
 
 function resetForm() {
@@ -207,6 +233,7 @@ document.getElementById("publish-now").addEventListener("click", () => {
   savePoll("published");
 });
 document.getElementById("add-choice").addEventListener("click", () => addChoice());
+loadAssistantDraft.addEventListener("click", loadDraftFromAssistant);
 document.getElementById("cancel-edit").addEventListener("click", resetForm);
 signOut.addEventListener("click", async () => { await client.auth.signOut(); window.location.reload(); });
 
