@@ -39,6 +39,35 @@ as $$
   select coalesce(auth.jwt() ->> 'email' = 'landonmillwee@gmail.com', false);
 $$;
 
+
+-- Public category suggestions: visitors can submit, only the admin can read.
+create table if not exists public.commonpick_category_recommendations (
+  id uuid primary key default gen_random_uuid(),
+  category text not null check (
+    char_length(btrim(category)) between 2 and 60
+    and category = btrim(category)
+  ),
+  created_at timestamptz not null default now()
+);
+
+alter table public.commonpick_category_recommendations enable row level security;
+revoke all on public.commonpick_category_recommendations from anon, authenticated;
+grant insert on public.commonpick_category_recommendations to anon, authenticated;
+grant select on public.commonpick_category_recommendations to authenticated;
+
+drop policy if exists "Visitors can submit category recommendations" on public.commonpick_category_recommendations;
+create policy "Visitors can submit category recommendations"
+on public.commonpick_category_recommendations for insert to anon, authenticated
+with check (
+  char_length(btrim(category)) between 2 and 60
+  and category = btrim(category)
+);
+
+drop policy if exists "Admin can read category recommendations" on public.commonpick_category_recommendations;
+create policy "Admin can read category recommendations"
+on public.commonpick_category_recommendations for select to authenticated
+using (public.commonpick_is_admin());
+
 -- Validate public votes against a published poll and one of its options.
 create or replace function public.commonpick_vote_is_valid(p_poll_id uuid, p_option_id text)
 returns boolean
