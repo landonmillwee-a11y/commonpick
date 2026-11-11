@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101d2b">
+  <title>Admin — CommonPick</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="admin-body">
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">C</span><span>commonpick<span class="brand-period">.</span></span></a>
+    <nav><a href="/">View site ↗</a></nav>
+    <button class="header-cta" id="sign-out" hidden>Sign out</button>
+  </header>
+  <main class="admin-main">
+    <div class="eyebrow">COMMONPICK / ADMINISTRATION</div>
+    <h1 class="admin-title">Poll <em>studio.</em></h1>
+    <p class="admin-lede">Create debates, add as many choices as you need, and decide when each poll goes live.</p>
+
+    <section class="admin-login" id="login-panel">
+      <h2>Administrator sign in</h2>
+      <p>A secure sign-in link will be sent to the administrator email address.</p>
+      <form id="login-form">
+        <label for="admin-email">ADMIN EMAIL</label>
+        <input id="admin-email" type="email" value="landonmillwee@gmail.com" required>
+        <button class="vote-button" type="submit">Send sign-in link ↗</button>
+      </form>
+      <p class="admin-message" id="login-message" aria-live="polite"></p>
+    </section>
+
+    <div id="dashboard" hidden>
+      <section class="admin-form-panel">
+        <div class="eyebrow">NEW COMMUNITY POLL</div>
+        <h2 id="form-heading">Create a poll.</h2>
+        <form id="poll-form">
+          <label for="poll-title">POLL QUESTION</label>
+          <input id="poll-title" maxlength="140" placeholder="What are we deciding?" required>
+          <label for="poll-description">DESCRIPTION (OPTIONAL)</label>
+          <textarea id="poll-description" rows="2" maxlength="300" placeholder="Add a little context for voters."></textarea>
+          <label for="poll-category">CATEGORY</label>
+          <input id="poll-category" maxlength="40" placeholder="FOOD & DRINK" value="COMMUNITY" required>
+          <div class="admin-options-heading"><label>ANSWER CHOICES</label><span>Add as many as the poll needs.</span></div>
+          <div id="choice-fields"></div>
+          <button class="results-button admin-add-choice" id="add-choice" type="button">+ Add another choice</button>
+          <div class="admin-form-actions">
+            <button class="vote-button" type="submit" id="save-draft">Save as draft</button>
+            <button class="vote-button" type="button" id="publish-now">Publish poll ↗</button>
+            <button class="results-button" type="button" id="cancel-edit" hidden>Cancel edit</button>
+          </div>
+          <p class="admin-message" id="form-message" aria-live="polite"></p>
+        </form>
+      </section>
+      <section class="admin-manage">
+        <div class="eyebrow">YOUR POLLS</div>
+        <h2>Manage polls.</h2>
+        <div id="admin-poll-list"></div>
+      </section>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
