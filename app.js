@@ -63,92 +63,142 @@ async function loadPolls() {
   }
 
   const myVotes = new Set((votes || []).filter(v => v.voter_id === voterId()).map(v => v.poll_id));
-  pollList.innerHTML = "";
+  const categories = [...new Set(polls.map(p => (p.category || "COMMUNITY").trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
+  let selectedCategory = "ALL";
+  let searchTerm = "";
 
-  polls.forEach((poll, index) => {
-    const pollOptions = (options || []).filter(o => o.poll_id === poll.id);
-    const pollVotes = (votes || []).filter(v => v.poll_id === poll.id);
-    const alreadyVoted = myVotes.has(poll.id);
-    const card = document.createElement("article");
-    card.className = "poll-card";
-    card.innerHTML = `
-      <div class="poll-card-intro">
-        <div class="poll-kicker">${escapeHtml(poll.category)} <span>•</span> COMMUNITY POLL ${String(index + 1).padStart(3,"0")}</div>
-        <h3>${escapeHtml(poll.title)}</h3>
-        <p>${escapeHtml(poll.description || "Cast your vote and see where the community stands.")}</p>
-        <div class="poll-count"><strong>${pollVotes.length.toLocaleString()}</strong><span>COMMUNITY VOTES</span></div>
-      </div>
-      <div class="poll-card-options">
-        <div class="options-label"><span>${alreadyVoted ? "COMMUNITY RESULTS" : "MAKE YOUR PICK"}</span><span>${pollOptions.length} CHOICES</span></div>
-        <div class="options" data-options></div>
-        <div class="poll-actions">
-          <button class="vote-button" data-vote disabled>${alreadyVoted ? "Vote recorded" : "Cast my vote"} <span>↗</span></button>
-          <button class="results-button" data-results>View results</button>
-        </div>
-        <p class="status" data-status aria-live="polite">${alreadyVoted ? "You've already voted on this poll from this browser." : "Choose one option to cast your vote."}</p>
-      </div>`;
-    const optionsContainer = card.querySelector("[data-options]");
-    const voteButton = card.querySelector("[data-vote]");
-    const resultsButton = card.querySelector("[data-results]");
-    const status = card.querySelector("[data-status]");
-    let selected = null;
-    let showResults = alreadyVoted;
+  pollList.innerHTML = `
+    <div class="poll-discovery">
+      <label class="poll-search-label" for="poll-search">FIND A POLL</label>
+      <input id="poll-search" class="poll-search" type="search" placeholder="Search questions, topics, or choices…" autocomplete="off">
+      <label class="poll-search-label" for="poll-category-filter">CATEGORY</label>
+      <select id="poll-category-filter" class="poll-category-filter">
+        <option value="ALL">All categories</option>
+        ${categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join("")}
+      </select>
+      <p class="poll-filter-count" id="poll-filter-count" aria-live="polite"></p>
+    </div>
+    <div class="poll-list-results" id="poll-list-results"></div>`;
 
-    function renderOptions() {
-      optionsContainer.innerHTML = "";
-      pollOptions.forEach((option, i) => {
-        const count = pollVotes.filter(v => v.option_id === option.option_id).length;
-        const pct = pollVotes.length ? Math.round(count / pollVotes.length * 100) : 0;
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "option" + (selected === option.option_id ? " selected" : "");
-        button.disabled = showResults;
-        button.innerHTML = `
-          <span class="option-result" style="width:${showResults ? pct : 0}%"></span>
-          <span class="option-main"><span class="option-letter">${String.fromCharCode(65 + i % 26)}</span><span>${escapeHtml(option.label)}</span></span>
-          <span class="option-percent">${showResults ? pct + "% · " + count : selected === option.option_id ? "SELECTED" : "CHOOSE"}</span>`;
-        button.addEventListener("click", () => {
-          selected = option.option_id;
-          voteButton.disabled = false;
-          renderOptions();
-        });
-        optionsContainer.append(button);
-      });
-      voteButton.disabled = !selected || showResults;
-      voteButton.textContent = showResults ? "Vote recorded" : "Cast my vote ↗";
+  const searchInput = document.getElementById("poll-search");
+  const categoryFilter = document.getElementById("poll-category-filter");
+  const filterCount = document.getElementById("poll-filter-count");
+  const resultsContainer = document.getElementById("poll-list-results");
+
+  function renderPollCards() {
+    const normalizedSearch = searchTerm.toLowerCase();
+    const filteredPolls = polls.filter(poll => {
+      const category = (poll.category || "COMMUNITY").trim();
+      const pollOptions = (options || []).filter(o => o.poll_id === poll.id);
+      const searchable = [poll.title, poll.description, category, ...pollOptions.map(o => o.label)]
+        .join(" ").toLowerCase();
+      return (selectedCategory === "ALL" || category === selectedCategory)
+        && searchable.includes(normalizedSearch);
+    });
+
+    filterCount.textContent = filteredPolls.length + (filteredPolls.length === 1 ? " poll found" : " polls found");
+    resultsContainer.innerHTML = "";
+    if (!filteredPolls.length) {
+      resultsContainer.innerHTML = '<div class="empty-polls filter-empty">No polls match those filters. Try another search or category.</div>';
+      return;
     }
 
-    voteButton.addEventListener("click", async () => {
-      if (!selected || showResults) return;
-      voteButton.disabled = true;
-      status.textContent = "Submitting your vote…";
-      const { error } = await client.from("commonpick_votes").insert({
-        poll_id: poll.id,
-        option_id: selected,
-        voter_id: voterId()
-      });
-      if (error) {
-        status.textContent = error.code === "23505"
-          ? "A vote has already been recorded from this browser."
-          : "Your vote could not be submitted. Please try again.";
-        console.error(error);
-        voteButton.disabled = false;
-        return;
+    filteredPolls.forEach((poll, index) => {
+      const pollOptions = (options || []).filter(o => o.poll_id === poll.id);
+      const pollVotes = (votes || []).filter(v => v.poll_id === poll.id);
+      const alreadyVoted = myVotes.has(poll.id);
+      const card = document.createElement("article");
+      card.className = "poll-card";
+      card.innerHTML = `
+        <div class="poll-card-intro">
+          <div class="poll-kicker">${escapeHtml(poll.category || "COMMUNITY")} <span>•</span> COMMUNITY POLL ${String(index + 1).padStart(3,"0")}</div>
+          <h3>${escapeHtml(poll.title)}</h3>
+          <p>${escapeHtml(poll.description || "Cast your vote and see where the community stands.")}</p>
+          <div class="poll-count"><strong>${pollVotes.length.toLocaleString()}</strong><span>COMMUNITY VOTES</span></div>
+        </div>
+        <div class="poll-card-options">
+          <div class="options-label"><span>${alreadyVoted ? "COMMUNITY RESULTS" : "MAKE YOUR PICK"}</span><span>${pollOptions.length} CHOICES</span></div>
+          <div class="options" data-options></div>
+          <div class="poll-actions">
+            <button class="vote-button" data-vote disabled>${alreadyVoted ? "Vote recorded" : "Cast my vote"} <span>↗</span></button>
+            <button class="results-button" data-results>View results</button>
+          </div>
+          <p class="status" data-status aria-live="polite">${alreadyVoted ? "You've already voted on this poll from this browser." : "Choose one option to cast your vote."}</p>
+        </div>`;
+      const optionsContainer = card.querySelector("[data-options]");
+      const voteButton = card.querySelector("[data-vote]");
+      const resultsButton = card.querySelector("[data-results]");
+      const status = card.querySelector("[data-status]");
+      let selected = null;
+      let showResults = alreadyVoted;
+
+      function renderOptions() {
+        optionsContainer.innerHTML = "";
+        pollOptions.forEach((option, i) => {
+          const count = pollVotes.filter(v => v.option_id === option.option_id).length;
+          const pct = pollVotes.length ? Math.round(count / pollVotes.length * 100) : 0;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "option" + (selected === option.option_id ? " selected" : "");
+          button.disabled = showResults;
+          button.innerHTML = `
+            <span class="option-result" style="width:${showResults ? pct : 0}%"></span>
+            <span class="option-main"><span class="option-letter">${String.fromCharCode(65 + i % 26)}</span><span>${escapeHtml(option.label)}</span></span>
+            <span class="option-percent">${showResults ? pct + "% · " + count : selected === option.option_id ? "SELECTED" : "CHOOSE"}</span>`;
+          button.addEventListener("click", () => {
+            selected = option.option_id;
+            voteButton.disabled = false;
+            renderOptions();
+          });
+          optionsContainer.append(button);
+        });
+        voteButton.disabled = !selected || showResults;
+        voteButton.textContent = showResults ? "Vote recorded" : "Cast my vote ↗";
       }
-      status.textContent = "Your vote is in. Here are the community results.";
-      await loadPolls();
-    });
 
-    resultsButton.addEventListener("click", () => {
-      showResults = true;
-      selected = null;
-      status.textContent = "Community results. Voting is disabled in this view.";
+      voteButton.addEventListener("click", async () => {
+        if (!selected || showResults) return;
+        voteButton.disabled = true;
+        status.textContent = "Submitting your vote…";
+        const { error } = await client.from("commonpick_votes").insert({
+          poll_id: poll.id,
+          option_id: selected,
+          voter_id: voterId()
+        });
+        if (error) {
+          status.textContent = error.code === "23505"
+            ? "A vote has already been recorded from this browser."
+            : "Your vote could not be submitted. Please try again.";
+          console.error(error);
+          voteButton.disabled = false;
+          return;
+        }
+        status.textContent = "Your vote is in. Here are the community results.";
+        await loadPolls();
+      });
+
+      resultsButton.addEventListener("click", () => {
+        showResults = true;
+        selected = null;
+        status.textContent = "Community results. Voting is disabled in this view.";
+        renderOptions();
+      });
+
       renderOptions();
+      resultsContainer.append(card);
     });
+  }
 
-    renderOptions();
-    pollList.append(card);
+  searchInput.addEventListener("input", () => {
+    searchTerm = searchInput.value.trim();
+    renderPollCards();
   });
+  categoryFilter.addEventListener("change", () => {
+    selectedCategory = categoryFilter.value;
+    renderPollCards();
+  });
+  renderPollCards();
 
   feedStatus.textContent = "";
 }
