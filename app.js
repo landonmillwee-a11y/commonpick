@@ -52,9 +52,8 @@ async function loadPolls() {
     return;
   }
 
-  const { data: votes, error: voteError } = await client
-    .from("commonpick_votes")
-    .select("poll_id,option_id,voter_id");
+  const { data: voteStats, error: voteError } = await client
+    .rpc("commonpick_public_vote_stats", { p_voter_id: voterId() });
 
   if (voteError) {
     feedStatus.textContent = "Vote totals could not be loaded.";
@@ -62,7 +61,14 @@ async function loadPolls() {
     return;
   }
 
-  const myVotes = new Set((votes || []).filter(v => v.voter_id === voterId()).map(v => v.poll_id));
+  const optionVoteCounts = new Map();
+  const pollVoteTotals = new Map();
+  const myVotes = new Set();
+  (voteStats || []).forEach(stat => {
+    optionVoteCounts.set(stat.poll_id + ":" + stat.option_id, Number(stat.vote_count));
+    pollVoteTotals.set(stat.poll_id, Number(stat.total_votes));
+    if (stat.has_voted) myVotes.add(stat.poll_id);
+  });
   const categories = [...new Set(polls.map(p => (p.category || "COMMUNITY").trim()).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b));
   let selectedCategory = "ALL";
@@ -94,7 +100,7 @@ async function loadPolls() {
   const highlightsContainer = document.getElementById("poll-highlights");
 
   function renderHighlights(visiblePolls) {
-    const voteCount = poll => (votes || []).filter(v => v.poll_id === poll.id).length;
+    const voteCount = poll => pollVoteTotals.get(poll.id) || 0;
     const trending = [...visiblePolls].sort((a, b) => voteCount(b) - voteCount(a) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 3);
     const newest = [...visiblePolls].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 3);
 
@@ -138,7 +144,7 @@ async function loadPolls() {
 
     filteredPolls.forEach((poll, index) => {
       const pollOptions = (options || []).filter(o => o.poll_id === poll.id);
-      const pollVotes = (votes || []).filter(v => v.poll_id === poll.id);
+      const totalVotes = pollVoteTotals.get(poll.id) || 0;
       const alreadyVoted = myVotes.has(poll.id);
       const card = document.createElement("article");
       card.className = "poll-card";
@@ -148,7 +154,7 @@ async function loadPolls() {
           <div class="poll-kicker">${escapeHtml(poll.category || "COMMUNITY")} <span>•</span> COMMUNITY POLL ${String(index + 1).padStart(3,"0")}</div>
           <h3>${escapeHtml(poll.title)}</h3>
           <p>${escapeHtml(poll.description || "Cast your vote and see where the community stands.")}</p>
-          <div class="poll-count"><strong>${pollVotes.length.toLocaleString()}</strong><span>COMMUNITY VOTES</span></div>
+          <div class="poll-count"><strong>${totalVotes.toLocaleString()}</strong><span>COMMUNITY VOTES</span></div>
         </div>
         <div class="poll-card-options">
           <div class="options-label"><span>${alreadyVoted ? "COMMUNITY RESULTS" : "MAKE YOUR PICK"}</span><span>${pollOptions.length} CHOICES</span></div>
@@ -172,17 +178,17 @@ async function loadPolls() {
         optionsContainer.innerHTML = "";
         const optionCounts = pollOptions.map(option => ({
           option,
-          count: pollVotes.filter(v => v.option_id === option.option_id).length
+          count: optionVoteCounts.get(poll.id + ":" + option.option_id) || 0
         }));
         const highestCount = Math.max(0, ...optionCounts.map(item => item.count));
         const leaders = optionCounts.filter(item => item.count === highestCount && highestCount > 0);
         if (showResults) {
-          if (!pollVotes.length) {
+          if (!totalVotes) {
             resultsSummary.textContent = "No votes have been cast yet.";
           } else if (leaders.length > 1) {
-            resultsSummary.textContent = `Tied · ${highestCount.toLocaleString()} votes each · ${pollVotes.length.toLocaleString()} total votes`;
+            resultsSummary.textContent = `Tied · ${highestCount.toLocaleString()} votes each · ${totalVotes.toLocaleString()} total votes`;
           } else {
-            resultsSummary.textContent = `Leading: ${leaders[0].option.label} · ${highestCount.toLocaleString()} votes · ${pollVotes.length.toLocaleString()} total votes`;
+            resultsSummary.textContent = `Leading: ${leaders[0].option.label} · ${highestCount.toLocaleString()} votes · ${totalVotes.toLocaleString()} total votes`;
           }
           resultsSummary.hidden = false;
         } else {
@@ -191,7 +197,7 @@ async function loadPolls() {
         }
         pollOptions.forEach((option, i) => {
           const count = optionCounts[i].count;
-          const pct = pollVotes.length ? Math.round(count / pollVotes.length * 100) : 0;
+          const pct = totalVotes ? Math.round(count / totalVotes * 100) : 0;
           const button = document.createElement("button");
           button.type = "button";
           button.className = "option" + (selected === option.option_id ? " selected" : "");
