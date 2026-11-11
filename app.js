@@ -78,6 +78,7 @@ async function loadPolls() {
       </select>
       <p class="poll-filter-count" id="poll-filter-count" aria-live="polite"></p>
     </div>
+    <div class="poll-highlights" id="poll-highlights"></div>
     <div class="poll-list-results" id="poll-list-results"></div>`;
 
   const searchInput = document.getElementById("poll-search");
@@ -90,6 +91,31 @@ async function loadPolls() {
   });
   const filterCount = document.getElementById("poll-filter-count");
   const resultsContainer = document.getElementById("poll-list-results");
+  const highlightsContainer = document.getElementById("poll-highlights");
+
+  function renderHighlights(visiblePolls) {
+    const voteCount = poll => (votes || []).filter(v => v.poll_id === poll.id).length;
+    const trending = [...visiblePolls].sort((a, b) => voteCount(b) - voteCount(a) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 3);
+    const newest = [...visiblePolls].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 3);
+
+    function sectionMarkup(title, eyebrow, items) {
+      const cards = items.map(poll => `
+        <a class="highlight-card" href="#poll-${escapeHtml(poll.id)}">
+          <span class="highlight-category">${escapeHtml(poll.category || "COMMUNITY")}</span>
+          <strong>${escapeHtml(poll.title)}</strong>
+          <span class="highlight-meta">${voteCount(poll).toLocaleString()} COMMUNITY VOTES <span>↗</span></span>
+        </a>`).join("");
+      return `
+        <section class="highlight-section">
+          <div class="highlight-heading"><span>${eyebrow}</span><h3>${title}</h3></div>
+          <div class="highlight-grid">${cards || '<p class="highlight-empty">No polls to show yet.</p>'}</div>
+        </section>`;
+    }
+
+    highlightsContainer.innerHTML =
+      sectionMarkup("Trending", "MOST VOTED", trending) +
+      sectionMarkup("Newest", "JUST PUBLISHED", newest);
+  }
 
   function renderPollCards() {
     const normalizedSearch = searchTerm.toLowerCase();
@@ -103,6 +129,7 @@ async function loadPolls() {
     });
 
     filterCount.textContent = filteredPolls.length + (filteredPolls.length === 1 ? " poll found" : " polls found");
+    renderHighlights(filteredPolls);
     resultsContainer.innerHTML = "";
     if (!filteredPolls.length) {
       resultsContainer.innerHTML = '<div class="empty-polls filter-empty">No polls match those filters. Try another search or category.</div>';
@@ -115,6 +142,7 @@ async function loadPolls() {
       const alreadyVoted = myVotes.has(poll.id);
       const card = document.createElement("article");
       card.className = "poll-card";
+      card.id = "poll-" + poll.id;
       card.innerHTML = `
         <div class="poll-card-intro">
           <div class="poll-kicker">${escapeHtml(poll.category || "COMMUNITY")} <span>•</span> COMMUNITY POLL ${String(index + 1).padStart(3,"0")}</div>
