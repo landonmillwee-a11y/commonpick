@@ -1,5 +1,5 @@
 // CommonPick: browser-safe public configuration only. Never put a Supabase service-role key here.
-const SUPABASE_URL = "https://zrjqmcgulgypqgoygbvx.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://zrjqmcgulgypqgoygbvx.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_BRuQrQwfwlQhAXnx9uuabA_XPje_3Ew";
 const POLL_ID = "11111111-1111-4111-8111-111111111111";
 
