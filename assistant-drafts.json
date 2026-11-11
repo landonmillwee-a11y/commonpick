@@ -1,21 +1,61 @@
 {
   "polls": [
     {
-      "id": "a8e4b4c2-7d91-4f35-9c62-2a6e8b1d4307",
-      "title": "What is the best fast-food french fry?",
-      "description": "Think taste, texture, seasoning, and consistency. Which chain deserves the top spot?",
+      "id": "d1b7f6a2-3c84-4e91-a5d2-8f0b6c3e7a41",
+      "title": "What is the best pizza topping?",
+      "description": "Consider flavor, texture, and how well it works on a classic pizza.",
       "category": "FOOD & DRINK",
       "choices": [
-        "McDonald's",
-        "Wendy's",
-        "Chick-fil-A",
-        "Five Guys",
-        "Arby's",
-        "Whataburger",
-        "In-N-Out",
-        "Raising Cane's",
-        "Burger King",
-        "Popeyes"
+        "Pepperoni",
+        "Sausage",
+        "Mushrooms",
+        "Extra cheese",
+        "Bacon",
+        "Jalapeños",
+        "Pineapple",
+        "Onions",
+        "Black olives",
+        "Green peppers",
+        "Chicken",
+        "Spinach"
+      ]
+    },
+    {
+      "id": "e2c8a7b3-4d95-4f02-b6e3-9a1c7d4f8b52",
+      "title": "Which U.S. city has the best food scene?",
+      "description": "Think variety, local specialties, restaurants, and overall food culture.",
+      "category": "TRAVEL & CULTURE",
+      "choices": [
+        "New York City",
+        "Chicago",
+        "Los Angeles",
+        "New Orleans",
+        "Austin",
+        "San Francisco",
+        "Houston",
+        "Nashville",
+        "Miami",
+        "Portland",
+        "Philadelphia",
+        "San Diego"
+      ]
+    },
+    {
+      "id": "f3d9b8c4-5ea6-4013-c7f4-0b2d8e5a9c63",
+      "title": "What is the best way to spend a day off?",
+      "description": "Choose the kind of day you would most look forward to.",
+      "category": "LIFESTYLE",
+      "choices": [
+        "Relax at home",
+        "Go out to eat",
+        "Spend time outdoors",
+        "Take a day trip",
+        "See friends or family",
+        "Watch movies or shows",
+        "Work on a hobby",
+        "Go shopping",
+        "Attend a live event",
+        "Play games"
       ]
     }
   ]
