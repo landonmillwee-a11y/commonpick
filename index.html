@@ -38,6 +38,19 @@
         <div><div class="eyebrow">THE COMMUNITY DECIDES <span class="section-number">/ LIVE</span></div><h2>Make your<br><em>pick.</em></h2></div>
         <div class="vote-meta"><span class="live-pill"><i></i> VOTING OPEN</span><span class="meta-small">COMMUNITY POLLS · YOUR VOICE COUNTS</span></div>
       </div>
+
+      <div class="voter-auth-panel" id="voter-auth-panel">
+        <div class="voter-auth-copy">
+          <strong>Verify your email to vote</strong>
+          <p id="voter-auth-status" aria-live="polite">You can browse polls and results without signing in.</p>
+        </div>
+        <form id="voter-auth-form" class="voter-auth-form">
+          <label for="voter-email">EMAIL ADDRESS</label>
+          <input id="voter-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+          <button class="vote-button" type="submit">Email me a sign-in link ↗</button>
+        </form>
+        <button id="voter-sign-out" class="results-button voter-sign-out" type="button" hidden>Sign out</button>
+      </div>
       <div id="poll-list" class="poll-list"><div class="empty-polls">Loading community polls…</div></div>
       <p id="feed-status" class="feed-status" aria-live="polite"></p>
       <div class="poll-foot"><span>CP / COMMUNITY POLLS</span><span>YOUR VOTE. YOUR CALL.</span></div>
