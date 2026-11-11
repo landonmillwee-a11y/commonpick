@@ -257,4 +257,30 @@ async function loadPolls() {
   feedStatus.textContent = "";
 }
 
+const recommendationForm = document.getElementById("category-recommendation-form");
+if (recommendationForm) {
+  recommendationForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const input = document.getElementById("category-recommendation-input");
+    const status = document.getElementById("category-recommendation-status");
+    const category = input.value.trim().replace(/\\s+/g, " ");
+    if (category.length < 2 || category.length > 60) {
+      status.textContent = "Please enter a category between 2 and 60 characters.";
+      return;
+    }
+    const submit = recommendationForm.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    status.textContent = "Submitting…";
+    const { error } = await client.from("commonpick_category_recommendations").insert({ category });
+    submit.disabled = false;
+    if (error) {
+      status.textContent = "Your recommendation could not be submitted. Please try again.";
+      console.error(error);
+      return;
+    }
+    input.value = "";
+    status.textContent = "Thanks. Your category recommendation has been sent.";
+  });
+}
+
 loadPolls();
