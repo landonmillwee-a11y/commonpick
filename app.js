@@ -318,7 +318,9 @@ if (voterSignOut) {
 
 client.auth.onAuthStateChange((event, session) => {
   updateVoterAuth(session);
-  if (event !== "INITIAL_SESSION") loadPolls();
+  if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+    window.setTimeout(() => loadPolls(), 0);
+  }
 });
 
 const recommendationForm = document.getElementById("category-recommendation-form");
