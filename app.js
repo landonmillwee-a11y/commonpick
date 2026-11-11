@@ -263,7 +263,7 @@ if (recommendationForm) {
     event.preventDefault();
     const input = document.getElementById("category-recommendation-input");
     const status = document.getElementById("category-recommendation-status");
-    const category = input.value.trim().replace(/\\s+/g, " ");
+    const category = input.value.trim().replace(/\s+/g, " ");
     if (category.length < 2 || category.length > 60) {
       status.textContent = "Please enter a category between 2 and 60 characters.";
       return;
