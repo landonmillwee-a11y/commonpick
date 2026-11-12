@@ -248,20 +248,7 @@ async function loadPolls() {
           return;
         }
         status.textContent = "Your vote is in. Here are the community results.";
-        await async function initializeVoting() {
-  const { data: { session } } = await client.auth.getSession();
-  if (!session) {
-    const { error } = await client.auth.signInAnonymously();
-    if (error) {
-      feedStatus.textContent = "Guest voting could not start. Please refresh and try again.";
-      console.error(error);
-      return;
-    }
-  }
-  await loadPolls();
-}
-
-initializeVoting();
+        await loadPolls();
       });
 
       resultsButton.addEventListener("click", () => {
@@ -361,4 +348,18 @@ if (recommendationForm) {
   });
 }
 
-loadPolls();
+
+async function initializeVoting() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) {
+    const { error } = await client.auth.signInAnonymously();
+    if (error) {
+      feedStatus.textContent = "Guest voting could not start: " + error.message;
+      console.error("Anonymous sign-in failed:", error);
+      return;
+    }
+  }
+  await loadPolls();
+}
+
+initializeVoting();
