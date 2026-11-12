@@ -60,7 +60,7 @@ async function loadPolls() {
   }
 
   const { data: voteStats, error: voteError } = await client
-    .rpc("commonpick_public_vote_stats");
+    .rpc("commonpick_public_vote_stats", { p_voter_id: voterId() });
 
   if (voteError) {
     feedStatus.textContent = "Vote totals could not be loaded.";
@@ -221,15 +221,14 @@ async function loadPolls() {
           optionsContainer.append(button);
         });
         voteButton.disabled = !selected || showResults;
-        voteButton.textContent = showResults ? "Vote recorded" : session ? "Cast my vote ↗" : "Sign in to vote ↗";
+        voteButton.textContent = showResults ? "Vote recorded" : "Cast my vote ↗";
       }
 
       voteButton.addEventListener("click", async () => {
         if (!selected || showResults) return;
         if (!session) {
-          status.textContent = "Verify your email before voting. Use the sign-in box above.";
-          voterAuthPanel.scrollIntoView({ behavior: "smooth", block: "center" });
-          voterEmailInput.focus({ preventScroll: true });
+          status.textContent = "Setting up your guest voting session. Please try again in a moment.";
+          voteButton.disabled = false;
           return;
         }
         voteButton.disabled = true;
@@ -242,14 +241,27 @@ async function loadPolls() {
         });
         if (error) {
           status.textContent = error.code === "23505"
-            ? "A vote has already been recorded from this browser."
+            ? "You've already voted on this poll."
             : "Your vote could not be submitted. Please try again.";
           console.error(error);
           voteButton.disabled = false;
           return;
         }
         status.textContent = "Your vote is in. Here are the community results.";
-        await loadPolls();
+        await async function initializeVoting() {
+  const { data: { session } } = await client.auth.getSession();
+  if (!session) {
+    const { error } = await client.auth.signInAnonymously();
+    if (error) {
+      feedStatus.textContent = "Guest voting could not start. Please refresh and try again.";
+      console.error(error);
+      return;
+    }
+  }
+  await loadPolls();
+}
+
+initializeVoting();
       });
 
       resultsButton.addEventListener("click", () => {
@@ -281,11 +293,14 @@ async function loadPolls() {
 function updateVoterAuth(session) {
   if (!voterAuthPanel) return;
   const signedIn = !!session?.user;
-  voterAuthForm.hidden = signedIn;
+  const isAnonymous = signedIn && session.user.is_anonymous;
+  voterAuthForm.hidden = !isAnonymous;
   voterSignOut.hidden = !signedIn;
-  voterAuthStatus.textContent = signedIn
-    ? "Verified as " + session.user.email + ". You can vote once per poll from any browser where you sign in."
-    : "Verify your email to vote. You can browse polls and results without signing in.";
+  voterAuthStatus.textContent = isAnonymous
+    ? "You're voting as a guest. Add and verify your email to keep this account and its votes."
+    : signedIn
+      ? "Your account is connected as " + (session.user.email || "a verified user") + "."
+      : "Setting up guest voting…";
 }
 
 if (voterAuthForm) {
@@ -296,14 +311,11 @@ if (voterAuthForm) {
     const submit = voterAuthForm.querySelector('button[type="submit"]');
     submit.disabled = true;
     voterAuthStatus.textContent = "Sending your secure sign-in link…";
-    const { error } = await client.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin + "/" }
-    });
+    const { error } = await client.auth.updateUser({ email });
     submit.disabled = false;
     voterAuthStatus.textContent = error
-      ? "Could not send the sign-in link: " + error.message
-      : "Check your email and open the sign-in link. You will return here ready to vote.";
+      ? "Could not add that email: " + error.message
+      : "Check your inbox and confirm the email. Your guest votes will stay with this account.";
   });
 }
 
