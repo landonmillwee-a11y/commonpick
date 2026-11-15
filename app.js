@@ -400,15 +400,29 @@ if (recommendationForm) {
 
 
 async function initializeVoting() {
-  const { data: { session } } = await client.auth.getSession();
+  let { data: { session } } = await client.auth.getSession();
   if (!session) {
-    const { error } = await client.auth.signInAnonymously();
+    const { data, error } = await client.auth.signInAnonymously();
     if (error) {
       feedStatus.textContent = "Guest voting could not start: " + error.message;
       console.error("Anonymous sign-in failed:", error);
       return;
     }
+    session = data.session;
   }
+
+  // When a returning user signs in on the browser where they originally voted,
+  // attach those older browser-only votes to their authenticated account.
+  // This lets the same account recognize those votes on other devices.
+  if (session?.user && !session.user.is_anonymous) {
+    const { error: claimError } = await client.rpc("commonpick_claim_legacy_votes", {
+      p_voter_id: voterId()
+    });
+    if (claimError) {
+      console.warn("Could not link older browser votes to this account:", claimError);
+    }
+  }
+
   await loadPolls();
 }
 
