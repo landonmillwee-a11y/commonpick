@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101d2b">
+  <meta name="description" content="Create your CommonPick account or sign in.">
+  <title>Join CommonPick</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="account-page">
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="CommonPick home"><span class="brand-mark">C</span><span>commonpick<span class="brand-period">.</span></span></a>
+    <nav><a href="/">Back to polls</a></nav>
+    <a class="header-cta" href="/">Explore polls <span>↗</span></a>
+  </header>
+  <main class="account-main">
+    <section class="account-card">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> JOIN THE COMMUNITY</div>
+      <h1>Create your<br><em>account.</em></h1>
+      <p class="account-intro">Save your voting identity, keep your votes connected, and take part in the conversation.</p>
+      <div id="account-current" class="account-current" hidden></div>
+      <form id="account-signup-form" class="account-form">
+        <label for="account-signup-email">EMAIL ADDRESS</label>
+        <input id="account-signup-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        <button class="vote-button" type="submit">Create account <span>↗</span></button>
+      </form>
+      <p id="account-signup-status" class="account-status" aria-live="polite"></p>
+      <div class="account-switch"><span>Already have an account?</span> <button id="show-signin" type="button">Sign in</button></div>
+      <form id="account-signin-form" class="account-form" hidden>
+        <label for="account-signin-email">EMAIL ADDRESS</label>
+        <input id="account-signin-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        <button class="vote-button" type="submit">Email me a sign-in link <span>↗</span></button>
+        <p id="account-signin-status" class="account-status" aria-live="polite"></p>
+        <div class="account-switch"><span>New to CommonPick?</span> <button id="show-signup" type="button">Create an account</button></div>
+      </form>
+      <p class="account-note">No password required. We'll email you a secure verification or sign-in link.</p>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="account.js"></script>
+</body>
+</html>
