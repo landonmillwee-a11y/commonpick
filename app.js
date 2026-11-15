@@ -170,6 +170,7 @@ async function loadPolls() {
           <div class="poll-actions">
             <button class="vote-button" data-vote disabled>${alreadyVoted ? "Vote recorded" : "Cast my vote"} <span>↗</span></button>
             <button class="results-button" data-results>View results</button>
+            <button class="results-button" data-share type="button">Copy poll link</button>
           </div>
           <p class="status" data-status aria-live="polite">${alreadyVoted ? "You've already voted on this poll from this browser." : "Choose one option to cast your vote."}</p>
         </div>`;
@@ -177,7 +178,32 @@ async function loadPolls() {
       const resultsSummary = card.querySelector("[data-results-summary]");
       const voteButton = card.querySelector("[data-vote]");
       const resultsButton = card.querySelector("[data-results]");
+      const shareButton = card.querySelector("[data-share]");
       const status = card.querySelector("[data-status]");
+
+      shareButton.addEventListener("click", async () => {
+        const shareUrl = window.location.origin + window.location.pathname + "#poll-" + encodeURIComponent(poll.id);
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(shareUrl);
+          } else {
+            const temporaryInput = document.createElement("textarea");
+            temporaryInput.value = shareUrl;
+            temporaryInput.setAttribute("readonly", "");
+            temporaryInput.style.position = "absolute";
+            temporaryInput.style.left = "-9999px";
+            document.body.append(temporaryInput);
+            temporaryInput.select();
+            const copied = document.execCommand("copy");
+            temporaryInput.remove();
+            if (!copied) throw new Error("Clipboard access is unavailable.");
+          }
+          status.textContent = "Poll link copied. Share it with anyone.";
+        } catch (error) {
+          status.textContent = "Could not copy the link. You can copy this page address: " + shareUrl;
+          console.error("Poll link copy failed:", error);
+        }
+      });
       let selected = null;
       let showResults = alreadyVoted;
 
@@ -290,6 +316,12 @@ async function loadPolls() {
     renderPollCards();
   });
   renderPollCards();
+
+  // Direct links to individual polls should scroll into view after the feed renders.
+  if (window.location.hash.startsWith("#poll-")) {
+    const targetId = decodeURIComponent(window.location.hash.slice(6));
+    requestAnimationFrame(() => document.getElementById("poll-" + targetId)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
 
   feedStatus.textContent = "";
 }
