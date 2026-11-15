@@ -377,3 +377,146 @@ footer .footer-brand{color:#edf2f5}
 .account-current p{color:#bdc9d0}
 .account-current button{color:#edf2f5}
 @media(max-width:520px){.account-main{padding:28px 14px}.account-card{padding:28px 22px}.topbar{padding:0 5%}}
+
+
+/* Account page: full-width dark layout */
+.account-page{
+  min-height:100vh;
+  background:#101820;
+  color:#edf2f5;
+}
+.account-page .topbar{
+  background:#101820;
+  border-bottom:1px solid #2c3b47;
+}
+.account-page .topbar nav a{color:#c1ccd4}
+.account-page .account-main{
+  min-height:calc(100vh - 82px);
+  display:grid;
+  place-items:center;
+  padding:clamp(42px,7vw,92px) 7%;
+  background:
+    radial-gradient(ellipse at 18% 45%,rgba(91,124,145,.13),transparent 42%),
+    #101820;
+}
+.account-page .account-card{
+  width:min(100%,1180px);
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(340px,.82fr);
+  grid-template-areas:
+    "eyebrow form"
+    "heading form"
+    "intro form"
+    "note form"
+    "current current"
+    "switch switch";
+  align-items:start;
+  column-gap:clamp(48px,8vw,112px);
+  row-gap:0;
+  padding:clamp(38px,6vw,82px);
+  background:#192630;
+  color:#edf2f5;
+  border:1px solid #344653;
+  border-radius:5px;
+  box-shadow:0 28px 90px rgba(0,0,0,.28);
+}
+.account-page .account-card>.eyebrow{grid-area:eyebrow;color:#b8c7d0}
+.account-page .account-card h1{
+  grid-area:heading;
+  font-size:clamp(54px,7vw,86px);
+  line-height:.98;
+  letter-spacing:-4px;
+  margin:28px 0 20px;
+  color:#f1f4f6;
+}
+.account-page .account-card h1 em{color:#e3a16b;font-style:normal}
+.account-page .account-intro{
+  grid-area:intro;
+  max-width:440px;
+  margin:0;
+  color:#bdc9d1;
+  font-size:15px;
+  line-height:1.8;
+}
+.account-page #account-signup-form,
+.account-page #account-signin-form{
+  grid-area:form;
+  align-self:center;
+  width:100%;
+  margin:0;
+  padding:30px;
+  background:#111c25;
+  border:1px solid #3a4b58;
+  border-radius:4px;
+}
+.account-page .account-form label{
+  color:#d2dce2;
+  font-size:10px;
+  letter-spacing:1.3px;
+}
+.account-page .account-form input{
+  min-height:54px;
+  padding:15px 16px;
+  background:#1a2935;
+  color:#f2f5f7;
+  border:1px solid #586b79;
+  border-radius:3px;
+  font-size:14px;
+}
+.account-page .account-form input::placeholder{color:#9eacb6}
+.account-page .account-form input:focus{
+  outline:2px solid #8eafc2;
+  outline-offset:2px;
+  border-color:#a9c4d3;
+}
+.account-page .account-form .vote-button{
+  min-height:54px;
+  margin-top:8px;
+  font-size:12px;
+}
+.account-page .account-switch{
+  grid-area:switch;
+  margin-top:28px;
+  color:#bdc9d1;
+  font-size:13px;
+}
+.account-page .account-switch button{
+  color:#f0b17f;
+  font-size:13px;
+}
+.account-page .account-note{
+  grid-area:note;
+  max-width:440px;
+  margin:30px 0 0;
+  padding:18px 0 0;
+  border-top:1px solid #344653;
+  color:#aebdc7;
+  font-size:12px;
+}
+.account-page .account-status{color:#d2dce2}
+.account-page .account-current{
+  grid-area:current;
+  margin-top:24px;
+  background:#111c25;
+  color:#edf2f5;
+  border-color:#526574;
+}
+.account-page .account-current p{color:#bdc9d1}
+.account-page .account-current button{color:#f0b17f}
+.account-page .account-form[hidden],
+.account-page #account-signin-form[hidden],
+.account-page #account-current[hidden]{display:none}
+@media(max-width:760px){
+  .account-page .account-main{min-height:calc(100vh - 70px);padding:34px 6%}
+  .account-page .account-card{
+    grid-template-columns:1fr;
+    grid-template-areas:"eyebrow" "heading" "intro" "form" "switch" "note" "current";
+    gap:0;
+    padding:32px 25px;
+  }
+  .account-page .account-card h1{font-size:clamp(52px,12vw,72px);margin:22px 0 16px}
+  .account-page #account-signup-form,
+  .account-page #account-signin-form{margin-top:30px;padding:24px 20px}
+  .account-page .account-switch{margin-top:20px}
+  .account-page .account-note{margin-top:22px}
+}
