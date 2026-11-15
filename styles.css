@@ -355,3 +355,25 @@ footer .footer-brand{color:#edf2f5}
 .poll-actions .results-button{padding:8px 0}
 .poll-card{scroll-margin-top:28px}
 @media(max-width:480px){.poll-actions{align-items:flex-start;gap:10px 16px}.poll-actions .vote-button{width:100%}}
+
+/* Account creation and sign-in */
+.account-page{min-height:100vh;background:var(--cream)}
+.account-main{min-height:calc(100vh - 82px);display:grid;place-items:center;padding:56px 20px}
+.account-card{width:min(100%,480px);background:var(--navy);color:#edf2f5;padding:clamp(28px,6vw,52px);border-radius:4px;box-shadow:0 24px 70px rgba(16,29,43,.12)}
+.account-card .eyebrow{color:#bdc9d0}
+.account-card h1{font:700 clamp(44px,8vw,66px)/.98 Manrope,sans-serif;letter-spacing:-2.5px;margin:24px 0 14px}
+.account-card h1 em{color:var(--orange);font-style:normal}
+.account-intro{color:#bdc9d0;font-size:14px;line-height:1.65;margin:0 0 30px}
+.account-form{display:grid;gap:12px;margin-top:20px}
+.account-form label{font-size:9px;font-weight:700;letter-spacing:1.4px;color:#c4d0d8}
+.account-form input{width:100%;min-height:48px;padding:13px 14px;border:1px solid #536573;border-radius:3px;background:#111c25;color:#edf2f5;font:14px "DM Sans",sans-serif}
+.account-form .vote-button{width:100%;min-height:48px;margin-top:4px}
+.account-switch{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:24px;color:#bdc9d0;font-size:12px}
+.account-switch button{border:0;background:none;color:#e5a27c;font:700 12px "DM Sans",sans-serif;cursor:pointer;padding:4px}
+.account-note,.account-status{font-size:12px;line-height:1.6;color:#bdc9d0}
+.account-note{margin-top:26px;padding-top:18px;border-top:1px solid #354858}
+.account-status{min-height:18px;margin:12px 0 0}
+.account-current{padding:14px;background:#1a2d40;border:1px solid #536573;border-radius:3px;font-size:13px}
+.account-current p{color:#bdc9d0}
+.account-current button{color:#edf2f5}
+@media(max-width:520px){.account-main{padding:28px 14px}.account-card{padding:28px 22px}.topbar{padding:0 5%}}
