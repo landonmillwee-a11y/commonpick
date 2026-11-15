@@ -226,18 +226,36 @@ async function loadPolls() {
 
       voteButton.addEventListener("click", async () => {
         if (!selected || showResults) return;
-        if (!session) {
-          status.textContent = "Setting up your guest voting session. Please try again in a moment.";
+        voteButton.disabled = true;
+        status.textContent = "Checking your guest voting session…";
+
+        // Read the latest auth session at click time. The page may have rendered
+        // before anonymous sign-in finished, leaving an older null session in
+        // the poll card's closure.
+        let { data: { session: activeSession } } = await client.auth.getSession();
+        if (!activeSession) {
+          const { data, error: authError } = await client.auth.signInAnonymously();
+          if (authError) {
+            status.textContent = "Guest sign-in failed: " + authError.message;
+            console.error("Anonymous sign-in failed while voting:", authError);
+            voteButton.disabled = false;
+            return;
+          }
+          activeSession = data.session;
+        }
+
+        if (!activeSession?.user?.id) {
+          status.textContent = "A guest account could not be created. Refresh the page and try again.";
           voteButton.disabled = false;
           return;
         }
-        voteButton.disabled = true;
+
         status.textContent = "Submitting your vote…";
         const { error } = await client.from("commonpick_votes").insert({
           poll_id: poll.id,
           option_id: selected,
           voter_id: voterId(),
-          user_id: session.user.id
+          user_id: activeSession.user.id
         });
         if (error) {
           status.textContent = error.code === "23505"
