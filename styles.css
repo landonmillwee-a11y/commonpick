@@ -520,3 +520,23 @@ footer .footer-brand{color:#edf2f5}
   .account-page .account-switch{margin-top:20px}
   .account-page .account-note{margin-top:22px}
 }
+
+
+/* Compact long poll choice lists */
+.choice-toggle{
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-top:12px;padding:9px 0;border:0;background:transparent;
+  color:#e3a16b;font:700 11px "DM Sans",sans-serif;cursor:pointer;
+}
+.choice-toggle:hover{color:#f2c49e;text-decoration:underline}
+.choice-toggle:focus-visible,.choice-search:focus-visible{
+  outline:2px solid #a9c4d3;outline-offset:3px
+}
+.choice-search-wrap{margin:10px 0 12px}
+.choice-search-wrap[hidden],.choice-toggle[hidden]{display:none}
+.choice-search{
+  width:100%;min-height:42px;padding:10px 13px;border:1px solid #536573;
+  border-radius:3px;background:#111c25;color:#edf2f5;font:12px "DM Sans",sans-serif;
+}
+.choice-search::placeholder{color:#9aaab5}
+.choice-search-empty{margin:8px 0;padding:13px;background:#1a2834;color:#c5d1d9;font-size:11px}
