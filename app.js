@@ -253,17 +253,17 @@ async function loadPolls() {
         }
 
         const canExpand = pollOptions.length > INITIAL_CHOICE_COUNT;
-        const showAll = showResults || expandedChoices || !canExpand;
+        const showAll = expandedChoices || !canExpand;
         const visibleOptions = optionCounts
           .map((item, index) => ({ ...item, index }))
           .filter(item => showAll || item.index < INITIAL_CHOICE_COUNT)
           .filter(item => !choiceSearchTerm || item.option.label.toLowerCase().includes(choiceSearchTerm));
 
-        choiceToggle.hidden = !canExpand || showResults;
+        choiceToggle.hidden = !canExpand;
         choiceToggle.textContent = expandedChoices
           ? "Show fewer choices"
           : `Show all ${pollOptions.length} choices`;
-        choiceSearchWrap.hidden = !canExpand || !expandedChoices || showResults;
+        choiceSearchWrap.hidden = !canExpand || !expandedChoices;
 
         visibleOptions.forEach(({ option, count, index }) => {
           const pct = totalVotes ? Math.round(count / totalVotes * 100) : 0;
