@@ -14,6 +14,9 @@ const formMessage = document.getElementById("form-message");
 const pollList = document.getElementById("admin-poll-list");
 const signOut = document.getElementById("sign-out");
 const loadAssistantDraft = document.getElementById("load-assistant-draft");
+const generatePollButton = document.getElementById("generate-poll");
+const aiPollTopic = document.getElementById("ai-poll-topic");
+const aiPollMessage = document.getElementById("ai-poll-message");
 const adminPollSearch = document.getElementById("admin-poll-search");
 const adminPollStatus = document.getElementById("admin-poll-status");
 const adminPollSummary = document.getElementById("admin-poll-summary");
@@ -82,6 +85,55 @@ async function loadAssistantQueue() {
     row.append(details, load);
     queue.append(row);
   });
+}
+
+async function generatePollDraft() {
+  const topic = aiPollTopic.value.trim();
+  const category = document.getElementById("poll-category").value.trim() || "COMMUNITY";
+  if (topic.length < 3) {
+    aiPollMessage.textContent = "Enter a topic with at least 3 characters.";
+    aiPollTopic.focus();
+    return;
+  }
+
+  generatePollButton.disabled = true;
+  generatePollButton.textContent = "Generating…";
+  aiPollMessage.textContent = "Creating a poll idea and balanced answer choices…";
+
+  try {
+    const { data: generated, error: generateError } = await client.functions.invoke("generate-poll", {
+      body: { topic, category }
+    });
+    if (generateError) throw generateError;
+    if (!generated?.title || !Array.isArray(generated.choices) || generated.choices.length < 2) {
+      throw new Error("The generator returned an incomplete poll. Please try again.");
+    }
+
+    const { data: savedDraft, error: saveError } = await client
+      .from("commonpick_assistant_drafts")
+      .insert({
+        title: generated.title,
+        description: generated.description || "",
+        category: generated.category || category.toUpperCase(),
+        choices: generated.choices,
+        status: "pending"
+      })
+      .select("id,title,description,category,choices,status,created_at")
+      .single();
+    if (saveError) throw saveError;
+
+    await loadAssistantQueue();
+    loadDraftFromAssistant(savedDraft);
+    aiPollTopic.value = "";
+    aiPollMessage.textContent = "Poll generated. Review and edit it below before saving or publishing.";
+  } catch (error) {
+    console.error("AI poll generation failed:", error);
+    const detail = error?.context?.error || error?.message || "Unknown error";
+    aiPollMessage.textContent = "Could not generate a poll: " + detail;
+  } finally {
+    generatePollButton.disabled = false;
+    generatePollButton.textContent = "Generate poll ↗";
+  }
 }
 
 function loadDraftFromAssistant(draft) {
@@ -381,6 +433,13 @@ document.getElementById("publish-now").addEventListener("click", () => {
 });
 document.getElementById("add-choice").addEventListener("click", () => addChoice());
 loadAssistantDraft.addEventListener("click", loadAssistantQueue);
+generatePollButton.addEventListener("click", generatePollDraft);
+aiPollTopic.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    generatePollDraft();
+  }
+});
 adminPollSearch?.addEventListener("input", renderAdminPolls);
 adminPollStatus?.addEventListener("change", renderAdminPolls);
 
