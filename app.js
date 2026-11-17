@@ -167,6 +167,10 @@ async function loadPolls() {
           <div class="options-label"><span>${alreadyVoted ? "COMMUNITY RESULTS" : "MAKE YOUR PICK"}</span><span>${pollOptions.length} CHOICES</span></div>
           <div class="results-summary" data-results-summary aria-live="polite"></div>
           <div class="options" data-options></div>
+          <div class="choice-search-wrap" data-choice-search-wrap hidden>
+            <input class="choice-search" data-choice-search type="search" placeholder="Find an answer…" autocomplete="off" aria-label="Search answer choices">
+          </div>
+          <button class="choice-toggle" data-choice-toggle type="button" hidden></button>
           <div class="poll-actions">
             <button class="vote-button" data-vote disabled>${alreadyVoted ? "Vote recorded" : "Cast my vote"} <span>↗</span></button>
             <button class="results-button" data-results>View results</button>
@@ -180,6 +184,25 @@ async function loadPolls() {
       const resultsButton = card.querySelector("[data-results]");
       const shareButton = card.querySelector("[data-share]");
       const status = card.querySelector("[data-status]");
+      const choiceSearchWrap = card.querySelector("[data-choice-search-wrap]");
+      const choiceSearch = card.querySelector("[data-choice-search]");
+      const choiceToggle = card.querySelector("[data-choice-toggle]");
+      let expandedChoices = false;
+      let choiceSearchTerm = "";
+      const INITIAL_CHOICE_COUNT = 6;
+
+      choiceToggle.addEventListener("click", () => {
+        expandedChoices = !expandedChoices;
+        if (!expandedChoices) {
+          choiceSearchTerm = "";
+          choiceSearch.value = "";
+        }
+        renderOptions();
+      });
+      choiceSearch.addEventListener("input", () => {
+        choiceSearchTerm = choiceSearch.value.trim().toLowerCase();
+        renderOptions();
+      });
 
       shareButton.addEventListener("click", async () => {
         const shareUrl = window.location.origin + window.location.pathname + "#poll-" + encodeURIComponent(poll.id);
@@ -228,8 +251,21 @@ async function loadPolls() {
           resultsSummary.hidden = true;
           resultsSummary.textContent = "";
         }
-        pollOptions.forEach((option, i) => {
-          const count = optionCounts[i].count;
+
+        const canExpand = pollOptions.length > INITIAL_CHOICE_COUNT;
+        const showAll = showResults || expandedChoices || !canExpand;
+        const visibleOptions = optionCounts
+          .map((item, index) => ({ ...item, index }))
+          .filter(item => showAll || item.index < INITIAL_CHOICE_COUNT)
+          .filter(item => !choiceSearchTerm || item.option.label.toLowerCase().includes(choiceSearchTerm));
+
+        choiceToggle.hidden = !canExpand || showResults;
+        choiceToggle.textContent = expandedChoices
+          ? "Show fewer choices"
+          : `Show all ${pollOptions.length} choices`;
+        choiceSearchWrap.hidden = !canExpand || !expandedChoices || showResults;
+
+        visibleOptions.forEach(({ option, count, index }) => {
           const pct = totalVotes ? Math.round(count / totalVotes * 100) : 0;
           const button = document.createElement("button");
           button.type = "button";
@@ -237,7 +273,7 @@ async function loadPolls() {
           button.disabled = showResults;
           button.innerHTML = `
             <span class="option-result" style="width:${showResults ? pct : 0}%"></span>
-            <span class="option-main"><span class="option-letter">${String.fromCharCode(65 + i % 26)}</span><span>${escapeHtml(option.label)}</span></span>
+            <span class="option-main"><span class="option-letter">${String.fromCharCode(65 + index % 26)}</span><span>${escapeHtml(option.label)}</span></span>
             <span class="option-percent">${showResults ? pct + "% · " + count.toLocaleString() + (count === 1 ? " vote" : " votes") : selected === option.option_id ? "SELECTED" : "CHOOSE"}</span>`;
           button.addEventListener("click", () => {
             selected = option.option_id;
@@ -246,6 +282,13 @@ async function loadPolls() {
           });
           optionsContainer.append(button);
         });
+
+        if (!visibleOptions.length && choiceSearchTerm) {
+          const noMatches = document.createElement("p");
+          noMatches.className = "choice-search-empty";
+          noMatches.textContent = "No choices match that search.";
+          optionsContainer.append(noMatches);
+        }
         voteButton.disabled = !selected || showResults;
         voteButton.textContent = showResults ? "Vote recorded" : "Cast my vote ↗";
       }
@@ -298,6 +341,8 @@ async function loadPolls() {
       resultsButton.addEventListener("click", () => {
         showResults = true;
         selected = null;
+        choiceSearchTerm = "";
+        choiceSearch.value = "";
         status.textContent = "Community results. Voting is disabled in this view.";
         renderOptions();
       });
