@@ -37,7 +37,19 @@
       <section class="admin-form-panel">
         <div class="eyebrow">NEW COMMUNITY POLL</div>
         <h2 id="form-heading">Create a poll.</h2>
-        <button class="results-button admin-add-choice" id="load-assistant-draft" type="button">Refresh assistant draft queue</button>
+        <div class="ai-poll-generator">
+          <label for="ai-poll-topic">WHAT SHOULD THIS POLL BE ABOUT?</label>
+          <div class="ai-poll-generator-row">
+            <input id="ai-poll-topic" maxlength="120" placeholder="e.g. Best breakfast spots, favorite movie villains…" autocomplete="off">
+            <button class="vote-button" id="generate-poll" type="button">Generate poll ↗</button>
+          </div>
+          <p class="ai-poll-hint">AI will suggest a question, description, and answer choices. You review and approve everything before it goes live.</p>
+          <p class="admin-message" id="ai-poll-message" aria-live="polite"></p>
+        </div>
+        <div class="assistant-queue-heading">
+          <h3>Generated drafts</h3>
+          <button class="results-button admin-add-choice" id="load-assistant-draft" type="button">Refresh queue</button>
+        </div>
         <div id="assistant-draft-queue" class="admin-poll-list" aria-live="polite"></div>
         <form id="poll-form">
           <label for="poll-title">POLL QUESTION</label>
