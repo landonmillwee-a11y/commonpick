@@ -35,6 +35,21 @@ In Supabase Authentication → Sign In / Providers:
 - Enable Anonymous Sign-Ins.
 - Enable Email sign-in for the administrator.
 
+## AI poll generation
+
+The admin dashboard includes an AI poll generator. It creates a question, description, category, and 6–10 answer choices, then saves the suggestion to the assistant draft queue for administrator review. It never publishes a poll automatically.
+
+The generator runs through the Supabase Edge Function at `supabase/functions/generate-poll/index.ts`. Its OpenAI API key must be stored as a Supabase Edge Function secret named `OPENAI_API_KEY`; never add the key to browser code or commit it to GitHub.
+
+To deploy the function:
+1. Open Supabase → Edge Functions → Deploy a new function → Via Editor.
+2. Name the function `generate-poll`.
+3. Copy the complete source from `supabase/functions/generate-poll/index.ts` in this repository into the editor, then deploy it.
+4. Open Edge Function Secrets and add `OPENAI_API_KEY` with your OpenAI API key.
+5. The function uses the project's built-in `SUPABASE_URL` and `SUPABASE_ANON_KEY` environment variables.
+
+The OpenAI API is billed separately from a ChatGPT subscription. The function checks the signed-in administrator's email before generating anything and returns a draft only; the browser saves it to the admin-only draft queue.
+
 ## Admin dashboard
 
 Open `https://commonpick.vercel.app/admin.html`.
