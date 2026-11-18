@@ -15,6 +15,10 @@ const pollList = document.getElementById("admin-poll-list");
 const signOut = document.getElementById("sign-out");
 const loadAssistantDraft = document.getElementById("load-assistant-draft");
 const generatePollButton = document.getElementById("generate-poll");
+const chatgptPrompt = document.getElementById("chatgpt-prompt");
+const chatgptPollJson = document.getElementById("chatgpt-poll-json");
+const copyChatgptPrompt = document.getElementById("copy-chatgpt-prompt");
+const importChatgptPoll = document.getElementById("import-chatgpt-poll");
 const aiPollTopic = document.getElementById("ai-poll-topic");
 const aiPollMessage = document.getElementById("ai-poll-message");
 const adminPollSearch = document.getElementById("admin-poll-search");
@@ -87,52 +91,81 @@ async function loadAssistantQueue() {
   });
 }
 
-async function generatePollDraft() {
+function buildChatGPTPrompt() {
   const topic = aiPollTopic.value.trim();
   const category = document.getElementById("poll-category").value.trim() || "COMMUNITY";
   if (topic.length < 3) {
     aiPollMessage.textContent = "Enter a topic with at least 3 characters.";
     aiPollTopic.focus();
+    return "";
+  }
+
+  return `Create one complete CommonPick community poll for this topic: "${topic}".
+Suggested category: ${category}.
+
+Make the poll engaging, neutral, easy to understand, and suitable for a broad public audience. Avoid leading wording, biased framing, duplicate answers, and overlapping choices. Choose 6–12 concise, distinct answer choices that cover the likely responses. Use "Other" only when it makes sense.
+
+Return ONLY valid JSON. Do not use Markdown fences or add commentary. Match this exact structure:
+{
+  "title": "The poll question, maximum 140 characters",
+  "description": "Optional short context, maximum 300 characters",
+  "category": "A short category, maximum 40 characters",
+  "choices": ["Choice 1", "Choice 2", "Choice 3"]
+}
+
+Requirements: 2–40 choices; each choice maximum 90 characters; no duplicate choices. The title must be phrased as a question when appropriate. Do not include vote counts or claim that the poll is official.`;
+}
+
+function startChatGPTWorkflow() {
+  const prompt = buildChatGPTPrompt();
+  if (!prompt) return;
+  chatgptPrompt.value = prompt;
+  aiPollMessage.textContent = "Prompt prepared. Copy it, then paste it into ChatGPT.";
+  window.open("https://chatgpt.com/", "_blank", "noopener");
+  chatgptPrompt.focus();
+  chatgptPrompt.select();
+  try {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(prompt).then(() => {
+        aiPollMessage.textContent = "Prompt copied. Paste it into the ChatGPT tab that just opened.";
+      }).catch(() => {
+        aiPollMessage.textContent = "ChatGPT opened. Copy the highlighted prompt above and paste it into ChatGPT.";
+      });
+    }
+  } catch {
+    aiPollMessage.textContent = "ChatGPT opened. Copy the highlighted prompt above and paste it into ChatGPT.";
+  }
+}
+
+function importChatGPTDraft() {
+  const raw = chatgptPollJson.value.trim();
+  if (!raw) {
+    aiPollMessage.textContent = "Paste ChatGPT's JSON response first.";
+    chatgptPollJson.focus();
     return;
   }
 
-  generatePollButton.disabled = true;
-  generatePollButton.textContent = "Generating…";
-  aiPollMessage.textContent = "Creating a poll idea and balanced answer choices…";
-
   try {
-    const { data: generated, error: generateError } = await client.functions.invoke("generate-poll", {
-      body: { topic, category }
-    });
-    if (generateError) throw generateError;
-    if (!generated?.title || !Array.isArray(generated.choices) || generated.choices.length < 2) {
-      throw new Error("The generator returned an incomplete poll. Please try again.");
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    const draft = JSON.parse(cleaned);
+    const title = typeof draft.title === "string" ? draft.title.trim() : "";
+    const description = typeof draft.description === "string" ? draft.description.trim() : "";
+    const category = typeof draft.category === "string" ? draft.category.trim().slice(0, 40) : "COMMUNITY";
+    const choices = Array.isArray(draft.choices)
+      ? [...new Map(draft.choices.map(value => String(value).trim()).filter(Boolean).map(value => [value.toLowerCase(), value])).values()]
+      : [];
+
+    if (!title || title.length > 140 || description.length > 300 || choices.length < 2 || choices.length > 40 || choices.some(choice => choice.length > 90)) {
+      throw new Error("Check that the response has a title, description under 300 characters, category, and 2–40 choices under 90 characters each.");
     }
 
-    const { data: savedDraft, error: saveError } = await client
-      .from("commonpick_assistant_drafts")
-      .insert({
-        title: generated.title,
-        description: generated.description || "",
-        category: generated.category || category.toUpperCase(),
-        choices: generated.choices,
-        status: "pending"
-      })
-      .select("id,title,description,category,choices,status,created_at")
-      .single();
-    if (saveError) throw saveError;
-
-    await loadAssistantQueue();
-    loadDraftFromAssistant(savedDraft);
-    aiPollTopic.value = "";
-    aiPollMessage.textContent = "Poll generated. Review and edit it below before saving or publishing.";
+    loadDraftFromAssistant({ title, description, category, choices });
+    chatgptPollJson.value = "";
+    aiPollMessage.textContent = "Poll imported. Review every field below, then save it as a draft or publish it yourself.";
   } catch (error) {
-    console.error("AI poll generation failed:", error);
-    const detail = error?.context?.error || error?.message || "Unknown error";
-    aiPollMessage.textContent = "Could not generate a poll: " + detail;
-  } finally {
-    generatePollButton.disabled = false;
-    generatePollButton.textContent = "Generate poll ↗";
+    aiPollMessage.textContent = error instanceof SyntaxError
+      ? "That response is not valid JSON. Ask ChatGPT to return only the JSON object, then paste it again."
+      : error.message;
   }
 }
 
@@ -433,11 +466,26 @@ document.getElementById("publish-now").addEventListener("click", () => {
 });
 document.getElementById("add-choice").addEventListener("click", () => addChoice());
 loadAssistantDraft.addEventListener("click", loadAssistantQueue);
-generatePollButton.addEventListener("click", generatePollDraft);
+generatePollButton.addEventListener("click", startChatGPTWorkflow);
+copyChatgptPrompt.addEventListener("click", async () => {
+  if (!chatgptPrompt.value) {
+    chatgptPrompt.value = buildChatGPTPrompt();
+    if (!chatgptPrompt.value) return;
+  }
+  try {
+    await navigator.clipboard.writeText(chatgptPrompt.value);
+    aiPollMessage.textContent = "Prompt copied. Paste it into ChatGPT.";
+  } catch {
+    chatgptPrompt.focus();
+    chatgptPrompt.select();
+    aiPollMessage.textContent = "Copy the selected prompt and paste it into ChatGPT.";
+  }
+});
+importChatgptPoll.addEventListener("click", importChatGPTDraft);
 aiPollTopic.addEventListener("keydown", event => {
   if (event.key === "Enter") {
     event.preventDefault();
-    generatePollDraft();
+    startChatGPTWorkflow();
   }
 });
 adminPollSearch?.addEventListener("input", renderAdminPolls);
