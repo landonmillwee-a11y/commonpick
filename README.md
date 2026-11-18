@@ -35,20 +35,11 @@ In Supabase Authentication → Sign In / Providers:
 - Enable Anonymous Sign-Ins.
 - Enable Email sign-in for the administrator.
 
-## AI poll generation
+## ChatGPT-assisted poll creation
 
-The admin dashboard includes an AI poll generator. It creates a question, description, category, and 6–10 answer choices, then saves the suggestion to the assistant draft queue for administrator review. It never publishes a poll automatically.
+The admin dashboard prepares a detailed prompt for ChatGPT. The administrator copies the prompt into ChatGPT, asks it to create a poll, then pastes ChatGPT's JSON response back into the admin page. CommonPick validates the response and loads the question, description, category, and answer choices into the poll editor.
 
-The generator runs through the Supabase Edge Function at `supabase/functions/generate-poll/index.ts`. Its OpenAI API key must be stored as a Supabase Edge Function secret named `OPENAI_API_KEY`; never add the key to browser code or commit it to GitHub.
-
-To deploy the function:
-1. Open Supabase → Edge Functions → Deploy a new function → Via Editor.
-2. Name the function `generate-poll`.
-3. Copy the complete source from `supabase/functions/generate-poll/index.ts` in this repository into the editor, then deploy it.
-4. Open Edge Function Secrets and add `OPENAI_API_KEY` with your OpenAI API key.
-5. The function uses the project's built-in `SUPABASE_URL` and `SUPABASE_ANON_KEY` environment variables.
-
-The OpenAI API is billed separately from a ChatGPT subscription. The function checks the signed-in administrator's email before generating anything and returns a draft only; the browser saves it to the admin-only draft queue.
+The administrator reviews and edits the imported poll, then chooses whether to save it as a draft or publish it. Nothing is published automatically. This workflow uses the ChatGPT website and does not require an OpenAI API key, Supabase Edge Function, or separate API billing.
 
 ## Admin dashboard
 
