@@ -38,12 +38,19 @@
         <div class="eyebrow">NEW COMMUNITY POLL</div>
         <h2 id="form-heading">Create a poll.</h2>
         <div class="ai-poll-generator">
+          <div class="eyebrow">CHATGPT POLL ASSISTANT</div>
           <label for="ai-poll-topic">WHAT SHOULD THIS POLL BE ABOUT?</label>
           <div class="ai-poll-generator-row">
             <input id="ai-poll-topic" maxlength="120" placeholder="e.g. Best breakfast spots, favorite movie villains…" autocomplete="off">
-            <button class="vote-button" id="generate-poll" type="button">Generate poll ↗</button>
+            <button class="vote-button" id="generate-poll" type="button">Create with ChatGPT ↗</button>
           </div>
-          <p class="ai-poll-hint">AI will suggest a question, description, and answer choices. You review and approve everything before it goes live.</p>
+          <p class="ai-poll-hint">This opens ChatGPT with a ready-to-use instruction. Ask for the poll, then paste ChatGPT's JSON response below to load it into the editor. No API key or additional service required.</p>
+          <label for="chatgpt-prompt">PROMPT TO SEND TO CHATGPT</label>
+          <textarea id="chatgpt-prompt" rows="5" readonly placeholder="Your ChatGPT prompt will appear here."></textarea>
+          <button class="results-button admin-add-choice" id="copy-chatgpt-prompt" type="button">Copy prompt</button>
+          <label for="chatgpt-poll-json">PASTE CHATGPT'S POLL RESPONSE</label>
+          <textarea id="chatgpt-poll-json" rows="5" placeholder='Paste the JSON response here…'></textarea>
+          <button class="vote-button" id="import-chatgpt-poll" type="button">Load poll into editor ↗</button>
           <p class="admin-message" id="ai-poll-message" aria-live="polite"></p>
         </div>
         <div class="assistant-queue-heading">
