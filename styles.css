@@ -597,3 +597,18 @@ footer .footer-brand{color:#edf2f5}
   .ai-poll-generator-row .vote-button{align-self:flex-start}
   .assistant-queue-heading{align-items:flex-start;flex-direction:column}
 }
+
+
+/* ChatGPT-assisted poll workflow */
+.ai-poll-generator textarea{
+  display:block;width:100%;margin:9px 0 12px;padding:12px 14px;
+  border:1px solid #536573;border-radius:3px;background:#111c25;
+  color:#edf2f5;font:12px/1.6 "DM Sans",sans-serif;resize:vertical;
+}
+.ai-poll-generator textarea::placeholder{color:#9aaab5}
+.ai-poll-generator textarea:focus{
+  outline:2px solid #8eafc2;outline-offset:2px;border-color:#a9c4d3;
+}
+.ai-poll-generator>label:not(:first-child){margin-top:20px}
+.ai-poll-generator #copy-chatgpt-prompt{margin:0 0 4px}
+.ai-poll-generator #import-chatgpt-poll{margin-top:2px}
